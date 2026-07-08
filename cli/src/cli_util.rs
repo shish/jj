@@ -4348,7 +4348,7 @@ trait AsyncCliDispatchHook {
 }
 
 /// Object-safe wrapper for async command dispatch function.
-struct AsyncCliDispatchFn<F>(F);
+pub struct AsyncCliDispatchFn<F>(pub F);
 
 impl<F> AsyncCliDispatch for AsyncCliDispatchFn<F>
 where
@@ -4411,11 +4411,22 @@ impl<'a> CliRunner<'a> {
     /// Initializes CLI environment and returns a builder. This should be called
     /// as early as possible.
     pub fn init() -> Self {
+        crate::cleanup_guard::init();
+        Self::init_with_commands(
+            crate::commands::default_app(),
+            Box::new(AsyncCliDispatchFn(crate::commands::run_command)),
+        )
+    }
+
+    pub fn init_with_commands(
+        app: clap::Command,
+        dispatch: Box<dyn AsyncCliDispatch + 'a>,
+    ) -> Self {
         let tracing_subscription = TracingSubscription::init();
         crate::cleanup_guard::init();
         Self {
             tracing_subscription,
-            app: crate::commands::default_app(),
+            app,
             config_layers: crate::config::default_config_layers(),
             config_migrations: crate::config::default_config_migrations(),
             store_factories: default_backend_factories(),
@@ -4424,7 +4435,7 @@ impl<'a> CliRunner<'a> {
             revset_extensions: Default::default(),
             commit_template_extensions: vec![],
             operation_template_extensions: vec![],
-            dispatch: Box::new(AsyncCliDispatchFn(crate::commands::run_command)),
+            dispatch: dispatch,
             dispatch_hooks: vec![],
             process_global_args_fns: vec![],
         }
