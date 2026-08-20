@@ -62,6 +62,11 @@ This document contains the help content for the `jj` command-line program.
 * [`jj file untrack`↴](#jj-file-untrack)
 * [`jj fix`↴](#jj-fix)
 * [`jj gerrit`↴](#jj-gerrit)
+* [`jj gerrit abandon`↴](#jj-gerrit-abandon)
+* [`jj gerrit download`↴](#jj-gerrit-download)
+* [`jj gerrit list`↴](#jj-gerrit-list)
+* [`jj gerrit log`↴](#jj-gerrit-log)
+* [`jj gerrit rebase`↴](#jj-gerrit-rebase)
 * [`jj gerrit upload`↴](#jj-gerrit-upload)
 * [`jj git`↴](#jj-git)
 * [`jj git clone`↴](#jj-git-clone)
@@ -1021,7 +1026,7 @@ Manage code reviews
 
    This defaults to the `cr.forge` setting, or if neither is set, will try to detect the backend from the remote URL.
 
-  Possible values: `demo`, `github`
+  Possible values: `demo`, `gerrit`, `github`
 
 
 
@@ -1651,11 +1656,87 @@ configuration.
 
 Interact with Gerrit Code Review
 
-**Usage:** `jj gerrit <COMMAND>`
+**Usage:** `jj gerrit [OPTIONS] <COMMAND>`
 
 ###### **Subcommands:**
 
+* `abandon` — Abandon/close a PR/CR/Diff on the forge
+* `download` — Download a PR/CR/Diff from the forge
+* `list` — List my open PRs/CRs/Diffs for the current project
+* `log` — Run `jj log` with annotated extra output for code review status
+* `rebase` — Pull from remote and rebase current stack
 * `upload` — Upload changes to Gerrit for code review, or update existing changes
+
+###### **Options:**
+
+* `--remote <REMOTE>` — The remote to work with (only named remotes are supported)
+
+   This defaults to the `git.push` setting. If that is not configured, and if there are multiple remotes, the remote named "origin" will be used.
+
+
+
+## `jj gerrit abandon`
+
+Abandon/close a PR/CR/Diff on the forge
+
+**Usage:** `jj gerrit abandon [OPTIONS] <IDENTIFIER>`
+
+###### **Arguments:**
+
+* `<IDENTIFIER>` — PR/Diff/CR ID
+
+###### **Options:**
+
+* `-m`, `--message <MESSAGE>` — Optional message to include when abandoning/closing the review
+
+
+
+## `jj gerrit download`
+
+Download a PR/CR/Diff from the forge
+
+**Usage:** `jj gerrit download <IDENTIFIER>`
+
+###### **Arguments:**
+
+* `<IDENTIFIER>` — PR/Diff/CR ID
+
+
+
+## `jj gerrit list`
+
+List my open PRs/CRs/Diffs for the current project
+
+**Usage:** `jj gerrit list [OPTIONS]`
+
+###### **Options:**
+
+* `--json` — Output in JSON format
+
+
+
+## `jj gerrit log`
+
+Run `jj log` with annotated extra output for code review status
+
+**Usage:** `jj gerrit log`
+
+
+
+## `jj gerrit rebase`
+
+Pull from remote and rebase current stack
+
+**Usage:** `jj gerrit rebase [OPTIONS] [REVSET]`
+
+###### **Arguments:**
+
+* `<REVSET>` — Revset to rebase
+
+###### **Options:**
+
+* `-a`, `--all-prs` — Rebase all branches that have an associated CR; skip branches without one
+* `-A`, `--all-branches` — Rebase all branches; use the default merge target for those without a CR
 
 
 

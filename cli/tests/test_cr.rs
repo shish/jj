@@ -19,6 +19,13 @@ fn test_cr_basic() {
     let test_env = TestEnvironment::default();
     test_env.run_jj_in(".", ["git", "init", "repo"]).success();
     let work_dir = test_env.work_dir("repo");
+    work_dir.write_file(
+        ".git/config",
+        r#"
+[remote "origin"]
+url = https://github.com/foo/bar.git
+"#,
+    );
 
     test_env.add_config(r#"cr.forge = "demo""#);
     work_dir.run_jj(["cr", "list"]).success();

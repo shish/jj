@@ -146,6 +146,10 @@ pub async fn cmd_cr(
             Ok(())
         }
         // Abandon
+        (CrCommand::Abandon(args), ForgeBackend::Gerrit) => {
+            crate::commands::gerrit::abandon::cmd_gerrit_abandon(ui, command, &remote_name, args)
+                .await
+        }
         (CrCommand::Abandon(args), ForgeBackend::GitHub) => {
             crate::commands::github::abandon::cmd_github_abandon(ui, command, &remote_name, args)
                 .await
@@ -159,6 +163,10 @@ pub async fn cmd_cr(
             crate::commands::github::download::cmd_github_download(ui, command, &remote_name, args)
                 .await
         }
+        (CrCommand::Download(args), ForgeBackend::Gerrit) => {
+            crate::commands::gerrit::download::cmd_gerrit_download(ui, command, &remote_name, args)
+                .await
+        }
         (CrCommand::Download(_), backend) => Err(CommandError::new(
             CommandErrorKind::User,
             format!("cr download not implemented for {backend:?}"),
@@ -168,14 +176,24 @@ pub async fn cmd_cr(
         (CrCommand::List(args), ForgeBackend::GitHub) => {
             crate::commands::github::list::cmd_github_list(ui, command, &remote_name, args).await
         }
+        (CrCommand::List(args), ForgeBackend::Gerrit) => {
+            crate::commands::gerrit::list::cmd_gerrit_list(ui, command, &remote_name, args).await
+        }
         // Log
         (CrCommand::Log(args), ForgeBackend::Demo) => self::demo::cmd_log(ui, command, args).await,
+        (CrCommand::Log(args), ForgeBackend::Gerrit) => {
+            crate::commands::gerrit::log::cmd_gerrit_log(ui, command, &remote_name, args).await
+        }
         (CrCommand::Log(args), ForgeBackend::GitHub) => {
             crate::commands::github::log::cmd_github_log(ui, command, &remote_name, args).await
         }
         // Rebase
         (CrCommand::Rebase(args), ForgeBackend::GitHub) => {
             crate::commands::github::rebase::cmd_github_rebase(ui, command, &remote_name, args)
+                .await
+        }
+        (CrCommand::Rebase(args), ForgeBackend::Gerrit) => {
+            crate::commands::gerrit::rebase::cmd_gerrit_rebase(ui, command, &remote_name, args)
                 .await
         }
         (CrCommand::Rebase(_), backend) => Err(CommandError::new(
@@ -186,6 +204,26 @@ pub async fn cmd_cr(
         (CrCommand::Upload(args), ForgeBackend::GitHub) => {
             crate::commands::github::upload::cmd_github_upload(ui, command, &remote_name, args)
                 .await
+        }
+        (CrCommand::Upload(args), ForgeBackend::Gerrit) => {
+            let client = crate::commands::gerrit::client::GerritClient::new(
+                ui,
+                command,
+                remote_name.as_str(),
+            )
+            .await?;
+
+            writeln!(ui.status(), "Pushing {} to Gerrit", args.revision)?;
+
+            let upload_args = crate::commands::gerrit::upload::UploadArgs::from_cr_upload_args(
+                remote_name.as_symbol().to_string(),
+                client.default_merge_target.clone(),
+                args.revision.clone(),
+                args.draft,
+                args.message.clone(),
+            );
+
+            crate::commands::gerrit::upload::cmd_gerrit_upload(ui, command, &upload_args).await
         }
         (CrCommand::Upload(_), backend) => Err(CommandError::new(
             CommandErrorKind::User,

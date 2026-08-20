@@ -18,25 +18,67 @@ use clap::Subcommand;
 
 use crate::cli_util::CommandHelper;
 use crate::command_error::CommandError;
+use crate::commands::cr::{CrAbandonArgs, CrDownloadArgs, CrListArgs, CrLogArgs, CrRebaseArgs};
 use crate::commands::gerrit;
+use crate::complete;
 use crate::ui::Ui;
+use clap_complete::ArgValueCandidates;
+use jj_lib::ref_name::RemoteNameBuf;
 
 /// Interact with Gerrit Code Review.
+#[derive(clap::Args, Clone, Debug)]
+#[command(subcommand_required = true)]
+pub struct GerritArgs {
+    /// The remote to work with (only named remotes are supported)
+    ///
+    /// This defaults to the `git.push` setting. If that is not configured, and
+    /// if there are multiple remotes, the remote named "origin" will be used.
+    #[arg(long)]
+    #[arg(add = ArgValueCandidates::new(complete::git_remotes))]
+    pub remote: Option<RemoteNameBuf>,
+
+    #[command(subcommand)]
+    pub subcommand: GerritCommand,
+}
+
 #[derive(Subcommand, Clone, Debug)]
+#[expect(clippy::large_enum_variant)]
 pub enum GerritCommand {
+    Abandon(CrAbandonArgs),
+    Download(CrDownloadArgs),
+    List(CrListArgs),
+    Log(CrLogArgs),
+    Rebase(CrRebaseArgs),
     Upload(gerrit::upload::UploadArgs),
 }
 
 pub async fn cmd_gerrit(
     ui: &mut Ui,
     command: &CommandHelper,
-    subcommand: &GerritCommand,
+    args: &GerritArgs,
 ) -> Result<(), CommandError> {
-    match subcommand {
-        GerritCommand::Upload(review) => {
-            gerrit::upload::cmd_gerrit_upload(ui, command, review).await
+    let remote_name =
+        crate::commands::cr::detect::get_remote_name(ui, command, args.remote.clone()).await?;
+    match &args.subcommand {
+        GerritCommand::Abandon(args) => {
+            abandon::cmd_gerrit_abandon(ui, command, &remote_name, args).await
         }
+        GerritCommand::Download(args) => {
+            download::cmd_gerrit_download(ui, command, &remote_name, args).await
+        }
+        GerritCommand::List(args) => list::cmd_gerrit_list(ui, command, &remote_name, args).await,
+        GerritCommand::Log(args) => log::cmd_gerrit_log(ui, command, &remote_name, args).await,
+        GerritCommand::Rebase(args) => {
+            rebase::cmd_gerrit_rebase(ui, command, &remote_name, args).await
+        }
+        GerritCommand::Upload(args) => upload::cmd_gerrit_upload(ui, command, args).await,
     }
 }
 
-mod upload;
+pub mod abandon;
+pub mod client;
+pub mod download;
+pub mod list;
+pub mod log;
+pub mod rebase;
+pub mod upload;

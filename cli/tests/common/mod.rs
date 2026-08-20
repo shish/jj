@@ -14,6 +14,7 @@
 
 mod command_output;
 mod config_schema_defaults;
+pub mod gerrit;
 pub mod github;
 mod test_environment;
 
