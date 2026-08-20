@@ -23,6 +23,7 @@ use jj_lib::ref_name::RemoteNameBuf;
 pub mod abandon;
 pub mod client;
 pub mod download;
+pub mod list;
 pub mod upload;
 
 /// Interact with GitHub Code Reviews.
@@ -45,6 +46,7 @@ pub struct GitHubArgs {
 pub enum GitHubCommand {
     Abandon(abandon::AbandonArgs),
     Download(download::DownloadArgs),
+    List(list::ListArgs),
     Upload(upload::UploadArgs),
 }
 
@@ -62,6 +64,7 @@ pub async fn cmd_github(
         GitHubCommand::Download(args) => {
             download::cmd_github_download(ui, command, &remote_name, args).await
         }
+        GitHubCommand::List(args) => list::cmd_github_list(ui, command, &remote_name, args).await,
         GitHubCommand::Upload(args) => {
             upload::cmd_github_upload(ui, command, &remote_name, args).await
         }
