@@ -56,6 +56,7 @@ mod test_git_private_commits;
 mod test_git_push;
 mod test_git_remotes;
 mod test_git_root;
+mod test_github_abandon_command;
 mod test_github_download_command;
 mod test_github_upload_command;
 mod test_gitignores;
