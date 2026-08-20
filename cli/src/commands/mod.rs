@@ -36,6 +36,8 @@ mod fix;
 mod gerrit;
 #[cfg(feature = "git")]
 mod git;
+#[cfg(feature = "git")]
+mod github;
 mod help;
 mod interdiff;
 mod log;
