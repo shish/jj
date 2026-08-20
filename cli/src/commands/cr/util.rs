@@ -15,6 +15,7 @@
 use jj_lib::commit::Commit;
 use jj_lib::repo::Repo as _;
 use reqwest::Url;
+use std::process::Command;
 
 use crate::cli_util::CommandHelper;
 use crate::cli_util::RevisionArg;
@@ -41,6 +42,34 @@ pub async fn get_remote_url(
         .url(gix::remote::Direction::Fetch)
         .map(|url| url.clone())
         .ok_or(user_error("No remote URL found"))
+}
+
+/// Finds the default branch of the given remote, by asking it for the branch
+/// its `HEAD` symref points at.
+pub fn get_merge_target(remote: &RemoteName) -> Result<String, CommandError> {
+    let remote = remote.as_str();
+    let output = Command::new("git")
+        .args(["ls-remote", "--symref", remote, "HEAD"])
+        .output()
+        .map_err(|e| user_error(format!("Failed to find HEAD in remote {remote}: {e}")))?;
+    if !output.status.success() {
+        return Err(user_error(format!(
+            "Failed to find HEAD in remote {remote}: {}",
+            String::from_utf8_lossy(&output.stderr).trim()
+        )));
+    }
+
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let first_line = stdout.lines().next().unwrap_or_default();
+    if let Some(rest) = first_line.strip_prefix("ref:")
+        && let Some(ref_path) = rest.split_whitespace().next()
+        && let Some(branch) = ref_path.strip_prefix("refs/heads/")
+    {
+        return Ok(branch.to_string());
+    }
+    Err(user_error(format!(
+        "Could not parse git ls-remote output: {first_line}"
+    )))
 }
 
 /// Normalizes a git remote URL into a forge's web/API base URL: `http(s)`
