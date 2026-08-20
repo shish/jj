@@ -29,6 +29,30 @@ fn _setup() -> TestEnvironment {
 }
 
 #[test]
+fn test_remote_url_detection() {
+    let test_env = TestEnvironment::default();
+    test_env
+        .run_jj_in(".", ["git", "init", "--colocate", "repo"])
+        .success();
+    let work_dir = test_env.work_dir("repo");
+
+    work_dir.write_file(
+        ".git/config",
+        "[remote \"origin\"]\nurl = https://github.com/foo/bar.git\n",
+    );
+    let output = test_env.work_dir("repo").run_jj(["cr", "info"]);
+    insta::assert_snapshot!(output, @r#"
+    Remote name: RemoteNameBuf("origin")
+    CR backend:  GitHub
+    Forge URL:   https://github.com/
+    [EOF]
+    ------- stderr -------
+    Done importing changes from the underlying Git repo.
+    [EOF]
+    "#);
+}
+
+#[test]
 fn test_remote_name_detection() {
     let test_env = TestEnvironment::default();
     test_env
