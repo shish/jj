@@ -29,6 +29,12 @@ use jj_lib::ref_name::RemoteName;
 #[derive(clap::Args, Clone, Debug)]
 pub struct LogArgs {}
 
+impl LogArgs {
+    pub fn from_cr_log_args() -> Self {
+        Self {}
+    }
+}
+
 pub async fn cmd_forgejo_log(
     ui: &mut Ui,
     command: &CommandHelper,

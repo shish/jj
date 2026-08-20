@@ -39,6 +39,12 @@ pub struct DownloadArgs {
     identifier: String,
 }
 
+impl DownloadArgs {
+    pub fn from_cr_download_args(identifier: String) -> Self {
+        Self { identifier }
+    }
+}
+
 pub async fn cmd_github_download(
     ui: &mut Ui,
     command: &CommandHelper,

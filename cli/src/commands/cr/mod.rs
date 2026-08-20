@@ -139,26 +139,277 @@ pub async fn cmd_cr(
             println!("Forge URL:   {}", util::normalize_forge_url(&remote_url)?);
             Ok(())
         }
+
         // Abandon
+        (CrCommand::Abandon(args), ForgeBackend::Forgejo) => {
+            let args = crate::commands::forgejo::abandon::AbandonArgs::from_cr_abandon_args(
+                args.identifier.clone(),
+                args.message.clone(),
+            );
+            crate::commands::forgejo::abandon::cmd_forgejo_abandon(ui, command, &remote_name, &args)
+                .await
+        }
+        (CrCommand::Abandon(args), ForgeBackend::Gerrit) => {
+            let args = crate::commands::gerrit::abandon::AbandonArgs::from_cr_abandon_args(
+                args.identifier.clone(),
+                args.message.clone(),
+            );
+            crate::commands::gerrit::abandon::cmd_gerrit_abandon(ui, command, &remote_name, &args)
+                .await
+        }
+        (CrCommand::Abandon(args), ForgeBackend::GitHub) => {
+            let args = crate::commands::github::abandon::AbandonArgs::from_cr_abandon_args(
+                args.identifier.clone(),
+                args.message.clone(),
+            );
+            crate::commands::github::abandon::cmd_github_abandon(ui, command, &remote_name, &args)
+                .await
+        }
+        (CrCommand::Abandon(args), ForgeBackend::GitLab) => {
+            let args = crate::commands::gitlab::abandon::AbandonArgs::from_cr_abandon_args(
+                args.identifier.clone(),
+                args.message.clone(),
+            );
+            crate::commands::gitlab::abandon::cmd_gitlab_abandon(ui, command, &remote_name, &args)
+                .await
+        }
+        (CrCommand::Abandon(args), ForgeBackend::Phabricator) => {
+            let args = crate::commands::phabricator::abandon::AbandonArgs::from_cr_abandon_args(
+                args.identifier.clone(),
+                args.message.clone(),
+            );
+            crate::commands::phabricator::abandon::cmd_phabricator_abandon(
+                ui,
+                command,
+                &remote_name,
+                &args,
+            )
+            .await
+        }
         (CrCommand::Abandon(_), backend) => Err(CommandError::new(
             CommandErrorKind::User,
             format!("cr abandon not implemented for {backend:?}"),
         )),
+
         // Download
+        (CrCommand::Download(args), ForgeBackend::Forgejo) => {
+            let args = crate::commands::forgejo::download::DownloadArgs::from_cr_download_args(
+                args.identifier.clone(),
+            );
+            crate::commands::forgejo::download::cmd_forgejo_download(
+                ui,
+                command,
+                &remote_name,
+                &args,
+            )
+            .await
+        }
+        (CrCommand::Download(args), ForgeBackend::Gerrit) => {
+            let args = crate::commands::gerrit::download::DownloadArgs::from_cr_download_args(
+                args.identifier.clone(),
+            );
+            crate::commands::gerrit::download::cmd_gerrit_download(ui, command, &remote_name, &args)
+                .await
+        }
+        (CrCommand::Download(args), ForgeBackend::GitHub) => {
+            let args = crate::commands::github::download::DownloadArgs::from_cr_download_args(
+                args.identifier.clone(),
+            );
+            crate::commands::github::download::cmd_github_download(ui, command, &remote_name, &args)
+                .await
+        }
+        (CrCommand::Download(args), ForgeBackend::GitLab) => {
+            let args = crate::commands::gitlab::download::DownloadArgs::from_cr_download_args(
+                args.identifier.clone(),
+            );
+            crate::commands::gitlab::download::cmd_gitlab_download(ui, command, &remote_name, &args)
+                .await
+        }
+        (CrCommand::Download(args), ForgeBackend::Phabricator) => {
+            let args = crate::commands::phabricator::download::DownloadArgs::from_cr_download_args(
+                args.identifier.clone(),
+            );
+            crate::commands::phabricator::download::cmd_phabricator_download(
+                ui,
+                command,
+                &remote_name,
+                &args,
+            )
+            .await
+        }
         (CrCommand::Download(_), backend) => Err(CommandError::new(
             CommandErrorKind::User,
             format!("cr download not implemented for {backend:?}"),
         )),
+
         // List
         (CrCommand::List(args), ForgeBackend::Demo) => self::demo::cmd_list(ui, args),
+        (CrCommand::List(args), ForgeBackend::Forgejo) => {
+            let args = crate::commands::forgejo::list::ListArgs::from_cr_list_args(args.json);
+            crate::commands::forgejo::list::cmd_forgejo_list(ui, command, &remote_name, &args).await
+        }
+        (CrCommand::List(args), ForgeBackend::Gerrit) => {
+            let args = crate::commands::gerrit::list::ListArgs::from_cr_list_args(args.json);
+            crate::commands::gerrit::list::cmd_gerrit_list(ui, command, &remote_name, &args).await
+        }
+        (CrCommand::List(args), ForgeBackend::GitHub) => {
+            let args = crate::commands::github::list::ListArgs::from_cr_list_args(args.json);
+            crate::commands::github::list::cmd_github_list(ui, command, &remote_name, &args).await
+        }
+        (CrCommand::List(args), ForgeBackend::GitLab) => {
+            let args = crate::commands::gitlab::list::ListArgs::from_cr_list_args(args.json);
+            crate::commands::gitlab::list::cmd_gitlab_list(ui, command, &remote_name, &args).await
+        }
+        (CrCommand::List(args), ForgeBackend::Phabricator) => {
+            let args = crate::commands::phabricator::list::ListArgs::from_cr_list_args(args.json);
+            crate::commands::phabricator::list::cmd_phabricator_list(
+                ui,
+                command,
+                &remote_name,
+                &args,
+            )
+            .await
+        }
+
         // Log
         (CrCommand::Log(args), ForgeBackend::Demo) => self::demo::cmd_log(ui, command, args).await,
+        (CrCommand::Log(_args), ForgeBackend::Forgejo) => {
+            let args = crate::commands::forgejo::log::LogArgs::from_cr_log_args();
+            crate::commands::forgejo::log::cmd_forgejo_log(ui, command, &remote_name, &args).await
+        }
+        (CrCommand::Log(_args), ForgeBackend::Gerrit) => {
+            let args = crate::commands::gerrit::log::LogArgs::from_cr_log_args();
+            crate::commands::gerrit::log::cmd_gerrit_log(ui, command, &remote_name, &args).await
+        }
+        (CrCommand::Log(_args), ForgeBackend::GitHub) => {
+            let args = crate::commands::github::log::LogArgs::from_cr_log_args();
+            crate::commands::github::log::cmd_github_log(ui, command, &remote_name, &args).await
+        }
+        (CrCommand::Log(_args), ForgeBackend::GitLab) => {
+            let args = crate::commands::gitlab::log::LogArgs::from_cr_log_args();
+            crate::commands::gitlab::log::cmd_gitlab_log(ui, command, &remote_name, &args).await
+        }
+        (CrCommand::Log(_args), ForgeBackend::Phabricator) => {
+            let args = crate::commands::phabricator::log::LogArgs::from_cr_log_args();
+            crate::commands::phabricator::log::cmd_phabricator_log(ui, command, &remote_name, &args)
+                .await
+        }
+
         // Rebase
+        (CrCommand::Rebase(args), ForgeBackend::Forgejo) => {
+            let args = crate::commands::forgejo::rebase::RebaseArgs::from_cr_rebase_args(
+                args.revset.clone(),
+                args.all_prs,
+                args.all_branches,
+            );
+            crate::commands::forgejo::rebase::cmd_forgejo_rebase(ui, command, &remote_name, &args)
+                .await
+        }
+        (CrCommand::Rebase(args), ForgeBackend::Gerrit) => {
+            let args = crate::commands::gerrit::rebase::RebaseArgs::from_cr_rebase_args(
+                args.revset.clone(),
+                args.all_prs,
+                args.all_branches,
+            );
+            crate::commands::gerrit::rebase::cmd_gerrit_rebase(ui, command, &remote_name, &args)
+                .await
+        }
+        (CrCommand::Rebase(args), ForgeBackend::GitHub) => {
+            let args = crate::commands::github::rebase::RebaseArgs::from_cr_rebase_args(
+                args.revset.clone(),
+                args.all_prs,
+                args.all_branches,
+            );
+            crate::commands::github::rebase::cmd_github_rebase(ui, command, &remote_name, &args)
+                .await
+        }
+        (CrCommand::Rebase(args), ForgeBackend::GitLab) => {
+            let args = crate::commands::gitlab::rebase::RebaseArgs::from_cr_rebase_args(
+                args.revset.clone(),
+                args.all_prs,
+                args.all_branches,
+            );
+            crate::commands::gitlab::rebase::cmd_gitlab_rebase(ui, command, &remote_name, &args)
+                .await
+        }
+        (CrCommand::Rebase(args), ForgeBackend::Phabricator) => {
+            let args = crate::commands::phabricator::rebase::RebaseArgs::from_cr_rebase_args(
+                args.revset.clone(),
+                args.all_prs,
+                args.all_branches,
+            );
+            crate::commands::phabricator::rebase::cmd_phabricator_rebase(
+                ui,
+                command,
+                &remote_name,
+                &args,
+            )
+            .await
+        }
         (CrCommand::Rebase(_), backend) => Err(CommandError::new(
             CommandErrorKind::User,
             format!("cr rebase not implemented for {backend:?}"),
         )),
+
         // Upload
+        (CrCommand::Upload(args), ForgeBackend::Forgejo) => {
+            let args = crate::commands::forgejo::upload::UploadArgs::from_cr_upload_args(
+                args.revision.clone(),
+                args.draft,
+                args.message.clone(),
+            );
+            crate::commands::forgejo::upload::cmd_forgejo_upload(ui, command, &remote_name, &args)
+                .await
+        }
+        (CrCommand::Upload(args), ForgeBackend::Gerrit) => {
+            let client =
+                crate::commands::gerrit::client::GerritClient::new(ui, command, &remote_name)
+                    .await?;
+
+            writeln!(ui.status(), "Pushing {} to Gerrit", args.revision)?;
+
+            let upload_args = crate::commands::gerrit::upload::UploadArgs::from_cr_upload_args(
+                remote_name.as_symbol().to_string(),
+                client.default_merge_target.clone(),
+                args.revision.clone(),
+                args.draft,
+                args.message.clone(),
+            );
+
+            crate::commands::gerrit::upload::cmd_gerrit_upload(ui, command, &upload_args).await
+        }
+        (CrCommand::Upload(args), ForgeBackend::GitHub) => {
+            let args = crate::commands::github::upload::UploadArgs::from_cr_upload_args(
+                args.revision.clone(),
+                args.draft,
+                args.message.clone(),
+            );
+            crate::commands::github::upload::cmd_github_upload(ui, command, &remote_name, &args)
+                .await
+        }
+        (CrCommand::Upload(args), ForgeBackend::GitLab) => {
+            let args = crate::commands::gitlab::upload::UploadArgs::from_cr_upload_args(
+                args.revision.clone(),
+                args.draft,
+                args.message.clone(),
+            );
+            crate::commands::gitlab::upload::cmd_gitlab_upload(ui, command, &remote_name, &args)
+                .await
+        }
+        (CrCommand::Upload(args), ForgeBackend::Phabricator) => {
+            let args = crate::commands::phabricator::upload::UploadArgs::from_cr_upload_args(
+                args.revision.clone(),
+                args.draft,
+                args.message.clone(),
+            );
+            crate::commands::phabricator::upload::cmd_phabricator_upload(
+                ui,
+                command,
+                &remote_name,
+                &args,
+            )
+            .await
+        }
         (CrCommand::Upload(_), backend) => Err(CommandError::new(
             CommandErrorKind::User,
             format!("cr upload not implemented for {backend:?}"),

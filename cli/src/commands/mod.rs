@@ -39,16 +39,9 @@ mod gerrit;
 #[cfg(feature = "git")]
 mod git;
 #[cfg(feature = "git")]
-<<<<<<< conflict 1 of 1
-%%%%%%% diff from: wrxnwzut 1040bf87 "cli/cr: forgejo backend" (rebased revision)
-\\\\\\\        to: wrxnwzut 1040bf87 "cli/cr: forgejo backend" (rebased revision)
--pub mod github;
-+mod github;
-+++++++ yskqvuns 9488d9be "cli/cr: gitlab backend" (rebased revision)
 pub mod github;
 #[cfg(feature = "git")]
 mod gitlab;
->>>>>>> conflict 1 of 1 ends
 mod help;
 mod interdiff;
 mod log;

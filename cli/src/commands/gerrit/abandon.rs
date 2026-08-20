@@ -32,6 +32,15 @@ pub struct AbandonArgs {
     message: Option<String>,
 }
 
+impl AbandonArgs {
+    pub fn from_cr_abandon_args(identifier: String, message: Option<String>) -> Self {
+        Self {
+            identifier,
+            message,
+        }
+    }
+}
+
 pub async fn cmd_gerrit_abandon(
     ui: &mut Ui,
     command: &CommandHelper,

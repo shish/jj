@@ -35,6 +35,12 @@ pub struct ListArgs {
     json: bool,
 }
 
+impl ListArgs {
+    pub fn from_cr_list_args(json: bool) -> Self {
+        Self { json }
+    }
+}
+
 pub async fn cmd_phabricator_list(
     ui: &mut Ui,
     command: &CommandHelper,

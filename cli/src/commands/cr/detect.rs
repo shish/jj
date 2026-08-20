@@ -31,6 +31,13 @@ const DEFAULT_REMOTE: &RemoteName = RemoteName::new("origin");
 #[derive(Clone, ContentHash, Debug, Eq, Hash, Ord, PartialEq, PartialOrd, clap::ValueEnum)]
 pub enum ForgeBackend {
     Demo,
+    Forgejo,
+    Gerrit,
+    #[value(name = "github")]
+    GitHub,
+    #[value(name = "gitlab")]
+    GitLab,
+    Phabricator,
 }
 
 pub async fn get_remote_name(
@@ -71,7 +78,22 @@ pub async fn get_forge(
     }
 
     // Check remote url
-    let _remote_url = crate::commands::cr::util::get_remote_url(ui, command, &remote_name).await?;
+    let remote_url = crate::commands::cr::util::get_remote_url(ui, command, &remote_name).await?;
+    let remote_host = remote_url.host.unwrap_or_default();
+    if remote_host.contains("gerrit") {
+        return Ok(ForgeBackend::Gerrit);
+    } else if remote_host.ends_with("github.com") || remote_host.ends_with("ghe.com") {
+        return Ok(ForgeBackend::GitHub);
+    } else if remote_host.ends_with("gitlab.com") || remote_host.contains("gitlab") {
+        return Ok(ForgeBackend::GitLab);
+    } else if remote_host.contains("phab") {
+        return Ok(ForgeBackend::Phabricator);
+    } else if remote_host.contains("forgejo")
+        || remote_host.contains("gitea")
+        || remote_host.ends_with("codeberg.org")
+    {
+        return Ok(ForgeBackend::Forgejo);
+    }
 
     Err(CommandError::new(
         CommandErrorKind::User,

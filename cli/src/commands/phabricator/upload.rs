@@ -52,6 +52,16 @@ pub struct UploadArgs {
     message: Option<String>,
 }
 
+impl UploadArgs {
+    pub fn from_cr_upload_args(revision: String, draft: bool, message: Option<String>) -> Self {
+        Self {
+            revision,
+            draft,
+            message,
+        }
+    }
+}
+
 pub async fn cmd_phabricator_upload(
     ui: &mut Ui,
     command: &CommandHelper,

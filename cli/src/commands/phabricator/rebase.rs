@@ -40,6 +40,16 @@ pub struct RebaseArgs {
     all_branches: bool,
 }
 
+impl RebaseArgs {
+    pub fn from_cr_rebase_args(revset: Option<String>, all_prs: bool, all_branches: bool) -> Self {
+        Self {
+            revset,
+            all_prs,
+            all_branches,
+        }
+    }
+}
+
 pub async fn cmd_phabricator_rebase(
     ui: &mut Ui,
     command: &CommandHelper,
