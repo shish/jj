@@ -17,6 +17,7 @@ use crate::command_error::CommandError;
 use crate::command_error::CommandErrorKind;
 pub(crate) mod demo;
 pub(crate) mod detect;
+pub(crate) mod rebase;
 pub(crate) mod review;
 pub(crate) mod util;
 use self::detect::ForgeBackend;
