@@ -24,6 +24,7 @@ pub mod abandon;
 pub mod client;
 pub mod download;
 pub mod list;
+pub mod log;
 pub mod upload;
 
 /// Interact with GitHub Code Reviews.
@@ -47,6 +48,7 @@ pub enum GitHubCommand {
     Abandon(abandon::AbandonArgs),
     Download(download::DownloadArgs),
     List(list::ListArgs),
+    Log(log::LogArgs),
     Upload(upload::UploadArgs),
 }
 
@@ -65,6 +67,7 @@ pub async fn cmd_github(
             download::cmd_github_download(ui, command, &remote_name, args).await
         }
         GitHubCommand::List(args) => list::cmd_github_list(ui, command, &remote_name, args).await,
+        GitHubCommand::Log(args) => log::cmd_github_log(ui, command, &remote_name, args).await,
         GitHubCommand::Upload(args) => {
             upload::cmd_github_upload(ui, command, &remote_name, args).await
         }

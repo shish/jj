@@ -59,6 +59,7 @@ mod test_git_root;
 mod test_github_abandon_command;
 mod test_github_download_command;
 mod test_github_list_command;
+mod test_github_log_command;
 mod test_github_upload_command;
 mod test_gitignores;
 mod test_global_opts;
