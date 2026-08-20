@@ -146,25 +146,47 @@ pub async fn cmd_cr(
             Ok(())
         }
         // Abandon
+        (CrCommand::Abandon(args), ForgeBackend::GitHub) => {
+            crate::commands::github::abandon::cmd_github_abandon(ui, command, &remote_name, args)
+                .await
+        }
         (CrCommand::Abandon(_), backend) => Err(CommandError::new(
             CommandErrorKind::User,
             format!("cr abandon not implemented for {backend:?}"),
         )),
         // Download
+        (CrCommand::Download(args), ForgeBackend::GitHub) => {
+            crate::commands::github::download::cmd_github_download(ui, command, &remote_name, args)
+                .await
+        }
         (CrCommand::Download(_), backend) => Err(CommandError::new(
             CommandErrorKind::User,
             format!("cr download not implemented for {backend:?}"),
         )),
         // List
         (CrCommand::List(args), ForgeBackend::Demo) => self::demo::cmd_list(ui, args),
+        (CrCommand::List(args), ForgeBackend::GitHub) => {
+            crate::commands::github::list::cmd_github_list(ui, command, &remote_name, args).await
+        }
         // Log
         (CrCommand::Log(args), ForgeBackend::Demo) => self::demo::cmd_log(ui, command, args).await,
+        (CrCommand::Log(args), ForgeBackend::GitHub) => {
+            crate::commands::github::log::cmd_github_log(ui, command, &remote_name, args).await
+        }
         // Rebase
+        (CrCommand::Rebase(args), ForgeBackend::GitHub) => {
+            crate::commands::github::rebase::cmd_github_rebase(ui, command, &remote_name, args)
+                .await
+        }
         (CrCommand::Rebase(_), backend) => Err(CommandError::new(
             CommandErrorKind::User,
             format!("cr rebase not implemented for {backend:?}"),
         )),
         // Upload
+        (CrCommand::Upload(args), ForgeBackend::GitHub) => {
+            crate::commands::github::upload::cmd_github_upload(ui, command, &remote_name, args)
+                .await
+        }
         (CrCommand::Upload(_), backend) => Err(CommandError::new(
             CommandErrorKind::User,
             format!("cr upload not implemented for {backend:?}"),

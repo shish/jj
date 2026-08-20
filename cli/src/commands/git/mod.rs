@@ -51,6 +51,7 @@ use self::init::GitInitArgs;
 use self::init::cmd_git_init;
 use self::push::GitPushArgs;
 use self::push::cmd_git_push;
+pub(crate) use self::push::cmd_git_push_changes;
 pub use self::push::is_push_operation;
 use self::remote::RemoteCommand;
 use self::remote::cmd_git_remote;

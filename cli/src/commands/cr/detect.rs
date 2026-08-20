@@ -34,6 +34,8 @@ const DEFAULT_REMOTE: &RemoteName = RemoteName::new("origin");
 #[derive(Clone, ContentHash, Debug, Eq, Hash, Ord, PartialEq, PartialOrd, clap::ValueEnum)]
 pub enum ForgeBackend {
     Demo,
+    #[value(name = "github")]
+    GitHub,
 }
 
 pub async fn get_remote_name(
@@ -96,7 +98,11 @@ pub async fn get_forge(
     }
 
     // Check remote url
-    let _remote_url = get_remote_url(ui, command, &remote_name).await?;
+    let remote_url = get_remote_url(ui, command, &remote_name).await?;
+    let remote_host = remote_url.host_str().unwrap_or_default();
+    if remote_host.contains("github") || remote_host.contains("ghe.com") {
+        return Ok(ForgeBackend::GitHub);
+    }
 
     Err(CommandError::new(
         CommandErrorKind::User,

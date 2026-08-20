@@ -276,6 +276,31 @@ enum BookmarkMoveDirection {
     Sideways,
 }
 
+pub(crate) async fn cmd_git_push_changes(
+    ui: &mut Ui,
+    command: &CommandHelper,
+    remote: &RemoteName,
+    changes: Vec<RevisionArg>,
+) -> Result<(), CommandError> {
+    let args = GitPushArgs {
+        remotes: Some(vec![remote.to_owned().into()]),
+        bookmark: vec![],
+        tag: vec![],
+        all: false,
+        tracked: false,
+        deleted: false,
+        allow_empty_description: false,
+        allow_private: false,
+        allow_conflicts: false,
+        revisions: vec![],
+        change: changes,
+        named: vec![],
+        dry_run: false,
+        option: vec![],
+    };
+    cmd_git_push(ui, command, &args).await
+}
+
 pub async fn cmd_git_push(
     ui: &mut Ui,
     command: &CommandHelper,
