@@ -34,6 +34,7 @@ pub enum ForgeBackend {
     Gerrit,
     #[value(name = "github")]
     GitHub,
+    Phabricator,
 }
 
 pub async fn get_remote_name(
@@ -80,6 +81,8 @@ pub async fn get_forge(
         return Ok(ForgeBackend::Gerrit);
     } else if remote_host.ends_with("github.com") || remote_host.ends_with("ghe.com") {
         return Ok(ForgeBackend::GitHub);
+    } else if remote_host.contains("phab") {
+        return Ok(ForgeBackend::Phabricator);
     }
 
     Err(CommandError::new(
