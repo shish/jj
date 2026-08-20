@@ -6,3 +6,19 @@ services:
     ports:
       - "127.0.0.1:8080:8080"
       - "127.0.0.1:29418:29418"
+
+  # Phabricator
+  phabricator-mysql:
+    build:
+      context: ./forges/phabricator-mysql
+
+  phabricator:
+    build:
+      context: ./forges/phabricator
+    ports:
+      - "127.0.0.1:8081:80"
+    depends_on:
+      phabricator-mysql:
+        condition: service_healthy
+    post_start:
+      - command: sh /scripts/phabricator-init.sh

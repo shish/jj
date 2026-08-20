@@ -16,6 +16,7 @@ mod command_output;
 mod config_schema_defaults;
 pub mod gerrit;
 pub mod github;
+pub mod phabricator;
 mod test_environment;
 
 pub use self::command_output::CommandOutput;
