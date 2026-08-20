@@ -21,6 +21,7 @@ use clap_complete::ArgValueCandidates;
 use jj_lib::ref_name::RemoteNameBuf;
 
 pub mod client;
+pub mod download;
 pub mod upload;
 
 /// Interact with GitHub Code Reviews.
@@ -41,6 +42,7 @@ pub struct GitHubArgs {
 
 #[derive(Subcommand, Clone, Debug)]
 pub enum GitHubCommand {
+    Download(download::DownloadArgs),
     Upload(upload::UploadArgs),
 }
 
@@ -52,6 +54,9 @@ pub async fn cmd_github(
     let remote_name =
         crate::commands::cr::detect::get_remote_name(ui, command, args.remote.clone()).await?;
     match &args.subcommand {
+        GitHubCommand::Download(args) => {
+            download::cmd_github_download(ui, command, &remote_name, args).await
+        }
         GitHubCommand::Upload(args) => {
             upload::cmd_github_upload(ui, command, &remote_name, args).await
         }
