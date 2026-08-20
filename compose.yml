@@ -14,3 +14,60 @@ services:
       interval: 120s
       timeout: 5s
 
+  # Phabricator
+  phabricator-mysql:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: "phabricator"
+      MYSQL_DATABASE: "phabricator"
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "mysqladmin",
+          "ping",
+          "-h",
+          "localhost",
+          "-u",
+          "root",
+          "-pphabricator",
+        ]
+      interval: 10s
+      timeout: 5s
+
+  phabricator:
+    image: phabricator/phabricator:latest
+    ports:
+      - "8081:80"
+    depends_on:
+      phabricator-mysql:
+        condition: service_healthy
+    volumes:
+      - ./scripts:/scripts:ro
+    healthcheck:
+      test: "curl --silent -f http://phab.localhost:80/api/user.whoami -d api.token=cli-aaaaaaaaaaaaaaaaaaaaaaaaaaaa | grep -q verified"
+      start_period: 120s
+      start_interval: 10s
+      interval: 120s
+      timeout: 5s
+    post_start:
+      - command:
+          - sh
+          - -c
+          - |
+            set -e
+            # basic settings
+            bin/config set mysql.host phabricator-mysql
+            bin/config set mysql.user root
+            bin/config set mysql.pass phabricator
+            bin/config set phabricator.base-uri http://phab.localhost:8081/
+            bin/config set differential.allow-self-accept true
+            # enable http server for diffusion (git) repositories
+            bin/config set diffusion.allow-http-auth true
+            bin/config set environment.append-paths '["/usr/lib/git-core"]'
+            # install db
+            bin/storage upgrade --force
+            # create admin user with fixed API token and VCS HTTP password
+            php /scripts/phab-init.php
+            # start backend daemons
+            runuser -u www-data bin/phd start

@@ -108,6 +108,13 @@ This document contains the help content for the `jj` command-line program.
 * [`jj operation revert`↴](#jj-operation-revert)
 * [`jj operation show`↴](#jj-operation-show)
 * [`jj parallelize`↴](#jj-parallelize)
+* [`jj phabricator`↴](#jj-phabricator)
+* [`jj phabricator abandon`↴](#jj-phabricator-abandon)
+* [`jj phabricator download`↴](#jj-phabricator-download)
+* [`jj phabricator list`↴](#jj-phabricator-list)
+* [`jj phabricator log`↴](#jj-phabricator-log)
+* [`jj phabricator rebase`↴](#jj-phabricator-rebase)
+* [`jj phabricator upload`↴](#jj-phabricator-upload)
 * [`jj prev`↴](#jj-prev)
 * [`jj rebase`↴](#jj-rebase)
 * [`jj redo`↴](#jj-redo)
@@ -199,6 +206,7 @@ To get started, see the tutorial [`jj help -k tutorial`].
 * `next` — Move the working-copy commit to the child revision
 * `operation` — Commands for working with the operation log
 * `parallelize` — Parallelize revisions by making them siblings
+* `phabricator` — Interact with Gerrit Code Review
 * `prev` — Change the working copy revision relative to the parent revision
 * `rebase` — Move revisions to different parent(s)
 * `redo` — Redo the most recently undone operation
@@ -1026,7 +1034,7 @@ Manage code reviews
 
    This defaults to the `cr.forge` setting, or if neither is set, will try to detect the backend from the remote URL.
 
-  Possible values: `demo`, `gerrit`, `github`
+  Possible values: `demo`, `gerrit`, `github`, `phabricator`
 
 
 
@@ -3001,6 +3009,110 @@ descendant, and it was an ancestor of 3 before, so it remains an ancestor.
 ###### **Arguments:**
 
 * `<REVSETS>` — The revisions to parallelize [aliases: -r]
+
+
+
+## `jj phabricator`
+
+Interact with Gerrit Code Review
+
+**Usage:** `jj phabricator [OPTIONS] <COMMAND>`
+
+###### **Subcommands:**
+
+* `abandon` — Abandon/close a PR/CR/Diff on the forge
+* `download` — Download a PR/CR/Diff from the forge
+* `list` — List my open PRs/CRs/Diffs for the current project
+* `log` — Run `jj log` with annotated extra output for code review status
+* `rebase` — Pull from remote and rebase current stack
+* `upload` — Upload current stack to the forge
+
+###### **Options:**
+
+* `--remote <REMOTE>` — The remote to work with (only named remotes are supported)
+
+   This defaults to the `git.push` setting. If that is not configured, and if there are multiple remotes, the remote named "origin" will be used.
+
+
+
+## `jj phabricator abandon`
+
+Abandon/close a PR/CR/Diff on the forge
+
+**Usage:** `jj phabricator abandon [OPTIONS] <IDENTIFIER>`
+
+###### **Arguments:**
+
+* `<IDENTIFIER>` — PR/Diff/CR ID
+
+###### **Options:**
+
+* `-m`, `--message <MESSAGE>` — Optional message to include when abandoning/closing the review
+
+
+
+## `jj phabricator download`
+
+Download a PR/CR/Diff from the forge
+
+**Usage:** `jj phabricator download <IDENTIFIER>`
+
+###### **Arguments:**
+
+* `<IDENTIFIER>` — PR/Diff/CR ID
+
+
+
+## `jj phabricator list`
+
+List my open PRs/CRs/Diffs for the current project
+
+**Usage:** `jj phabricator list [OPTIONS]`
+
+###### **Options:**
+
+* `--json` — Output in JSON format
+
+
+
+## `jj phabricator log`
+
+Run `jj log` with annotated extra output for code review status
+
+**Usage:** `jj phabricator log`
+
+
+
+## `jj phabricator rebase`
+
+Pull from remote and rebase current stack
+
+**Usage:** `jj phabricator rebase [OPTIONS] [REVSET]`
+
+###### **Arguments:**
+
+* `<REVSET>` — Revset to rebase
+
+###### **Options:**
+
+* `-a`, `--all-prs` — Rebase all branches that have an associated CR; skip branches without one
+* `-A`, `--all-branches` — Rebase all branches; use the default merge target for those without a CR
+
+
+
+## `jj phabricator upload`
+
+Upload current stack to the forge
+
+**Usage:** `jj phabricator upload [OPTIONS]`
+
+###### **Options:**
+
+* `-r`, `--revision <REF>` — Ref to push
+
+  Default value: `stack()`
+* `--draft` [alias: `wip`] — Create as a draft/WIP
+* `-m`, `--message <MESSAGE>` — Commit/PR message
 
 
 

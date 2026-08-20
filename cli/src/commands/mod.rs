@@ -46,6 +46,8 @@ mod new;
 mod next;
 mod operation;
 mod parallelize;
+#[cfg(feature = "git")]
+pub mod phabricator;
 mod prev;
 mod rebase;
 mod redo;
@@ -146,6 +148,8 @@ enum Command {
     #[command(visible_alias = "op")]
     Operation(operation::OperationCommand),
     Parallelize(parallelize::ParallelizeArgs),
+    #[cfg(feature = "git")]
+    Phabricator(phabricator::PhabricatorArgs),
     Prev(prev::PrevArgs),
     Rebase(rebase::RebaseArgs),
     Redo(redo::RedoArgs),
@@ -215,6 +219,8 @@ pub async fn run_command(ui: &mut Ui, command_helper: &CommandHelper) -> Result<
         Command::Next(args) => next::cmd_next(ui, command_helper, args).await,
         Command::Operation(args) => operation::cmd_operation(ui, command_helper, args).await,
         Command::Parallelize(args) => parallelize::cmd_parallelize(ui, command_helper, args).await,
+        #[cfg(feature = "git")]
+        Command::Phabricator(args) => phabricator::cmd_phabricator(ui, command_helper, args).await,
         Command::Prev(args) => prev::cmd_prev(ui, command_helper, args).await,
         Command::Rebase(args) => rebase::cmd_rebase(ui, command_helper, args).await,
         Command::Redo(args) => redo::cmd_redo(ui, command_helper, args).await,
