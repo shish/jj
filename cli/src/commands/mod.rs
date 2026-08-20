@@ -36,6 +36,8 @@ mod fix;
 mod gerrit;
 #[cfg(feature = "git")]
 mod git;
+#[cfg(feature = "git")]
+pub mod github;
 mod help;
 mod interdiff;
 mod log;
@@ -132,6 +134,9 @@ enum Command {
     #[cfg(feature = "git")]
     #[command(subcommand)]
     Git(git::GitCommand),
+    #[cfg(feature = "git")]
+    #[command(name = "github")]
+    GitHub(github::GitHubArgs),
     Help(help::HelpArgs),
     Interdiff(interdiff::InterdiffArgs),
     Log(log::LogArgs),
@@ -200,6 +205,8 @@ pub async fn run_command(ui: &mut Ui, command_helper: &CommandHelper) -> Result<
         Command::Gerrit(sub_args) => gerrit::cmd_gerrit(ui, command_helper, sub_args).await,
         #[cfg(feature = "git")]
         Command::Git(args) => git::cmd_git(ui, command_helper, args).await,
+        #[cfg(feature = "git")]
+        Command::GitHub(args) => github::cmd_github(ui, command_helper, args).await,
         Command::Help(args) => help::cmd_help(ui, command_helper, args).await,
         Command::Arrange(args) => arrange::cmd_arrange(ui, command_helper, args).await,
         Command::Interdiff(args) => interdiff::cmd_interdiff(ui, command_helper, args).await,
