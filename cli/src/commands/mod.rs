@@ -129,8 +129,7 @@ enum Command {
     File(file::FileCommand),
     Fix(fix::FixArgs),
     #[cfg(feature = "git")]
-    #[command(subcommand)]
-    Gerrit(gerrit::GerritCommand),
+    Gerrit(gerrit::GerritArgs),
     #[cfg(feature = "git")]
     #[command(subcommand)]
     Git(git::GitCommand),

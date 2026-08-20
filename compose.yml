@@ -1,0 +1,8 @@
+services:
+  # Gerrit
+  gerrit:
+    build:
+      context: ./forges/gerrit
+    ports:
+      - "127.0.0.1:8080:8080"
+      - "127.0.0.1:29418:29418"

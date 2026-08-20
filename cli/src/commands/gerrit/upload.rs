@@ -252,6 +252,25 @@ pub struct UploadArgs {
     // See https://gerrit-review.googlesource.com/Documentation/user-upload.html#patch_set_description
 }
 
+impl UploadArgs {
+    pub fn from_cr_upload_args(
+        remote: String,
+        remote_branch: String,
+        range: String,
+        draft: bool,
+        message: Option<String>,
+    ) -> Self {
+        Self {
+            revisions: vec![RevisionArg::from(range)],
+            remote_branch: Some(remote_branch),
+            remote: Some(remote),
+            message,
+            wip: draft,
+            ..Default::default()
+        }
+    }
+}
+
 /// Which emails receive an email notification about an update to the change.
 #[derive(clap::ValueEnum, Clone, Debug)]
 #[value(rename_all = "kebab_case")]

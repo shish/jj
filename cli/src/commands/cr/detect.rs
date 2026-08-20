@@ -31,6 +31,7 @@ const DEFAULT_REMOTE: &RemoteName = RemoteName::new("origin");
 #[derive(Clone, ContentHash, Debug, Eq, Hash, Ord, PartialEq, PartialOrd, clap::ValueEnum)]
 pub enum ForgeBackend {
     Demo,
+    Gerrit,
     #[value(name = "github")]
     GitHub,
 }
@@ -75,7 +76,9 @@ pub async fn get_forge(
     // Check remote url
     let remote_url = crate::commands::cr::util::get_remote_url(ui, command, &remote_name).await?;
     let remote_host = remote_url.host.unwrap_or_default();
-    if remote_host.ends_with("github.com") || remote_host.ends_with("ghe.com") {
+    if remote_host.contains("gerrit") {
+        return Ok(ForgeBackend::Gerrit);
+    } else if remote_host.ends_with("github.com") || remote_host.ends_with("ghe.com") {
         return Ok(ForgeBackend::GitHub);
     }
 
