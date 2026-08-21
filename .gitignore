@@ -17,6 +17,7 @@ mise.local.toml
 # mkdocs
 /.venv
 /.python-version
+__pycache__
 
 # Editor specific ignores
 .idea
