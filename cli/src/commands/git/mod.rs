@@ -18,6 +18,7 @@ mod export;
 mod fetch;
 mod import;
 mod init;
+mod pre_commit;
 mod push;
 mod remote;
 mod root;
@@ -49,6 +50,8 @@ use self::import::GitImportArgs;
 use self::import::cmd_git_import;
 use self::init::GitInitArgs;
 use self::init::cmd_git_init;
+use self::pre_commit::GitPreCommitArgs;
+use self::pre_commit::cmd_git_pre_commit;
 use self::push::GitPushArgs;
 use self::push::cmd_git_push;
 pub use self::push::is_push_operation;
@@ -83,6 +86,7 @@ pub enum GitCommand {
     Fetch(GitFetchArgs),
     Import(GitImportArgs),
     Init(GitInitArgs),
+    PreCommit(GitPreCommitArgs),
     Push(GitPushArgs),
     #[command(subcommand)]
     Remote(RemoteCommand),
@@ -101,6 +105,7 @@ pub async fn cmd_git(
         GitCommand::Fetch(args) => cmd_git_fetch(ui, command, args).await,
         GitCommand::Import(args) => cmd_git_import(ui, command, args).await,
         GitCommand::Init(args) => cmd_git_init(ui, command, args).await,
+        GitCommand::PreCommit(args) => cmd_git_pre_commit(ui, command, args).await,
         GitCommand::Push(args) => cmd_git_push(ui, command, args).await,
         GitCommand::Remote(args) => cmd_git_remote(ui, command, args).await,
         GitCommand::Root(args) => cmd_git_root(ui, command, args).await,
