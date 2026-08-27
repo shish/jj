@@ -54,6 +54,7 @@ pub mod operation;
 pub mod ref_name;
 pub mod refs;
 pub mod repo_path;
+pub mod review;
 pub mod revset_backend;
 pub mod signing;
 pub mod store;
