@@ -83,6 +83,7 @@ pub use jj_core::ref_name;
 pub use jj_core::refs;
 pub mod repo;
 pub use jj_core::repo_path;
+pub use jj_core::review;
 pub mod revset;
 pub mod rewrite;
 #[cfg(feature = "testing")]
