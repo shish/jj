@@ -1206,7 +1206,24 @@ impl WorkspaceCommandEnvironment {
         repo: &'a dyn Repo,
         id_prefix_context: &'a IdPrefixContext,
     ) -> CommitTemplateLanguage<'a> {
-        CommitTemplateLanguage::new(
+        self.commit_template_language_with_extensions(repo, id_prefix_context, &[])
+    }
+
+    pub fn commit_template_language_with_extensions<'a>(
+        &'a self,
+        repo: &'a dyn Repo,
+        id_prefix_context: &'a IdPrefixContext,
+        additional_extensions: &[&'a dyn CommitTemplateLanguageExtension],
+    ) -> CommitTemplateLanguage<'a> {
+        let extensions = self
+            .command
+            .data
+            .commit_template_extensions
+            .iter()
+            .map(AsRef::as_ref)
+            .chain(additional_extensions.iter().copied())
+            .collect_vec();
+        CommitTemplateLanguage::new_with_extensions(
             repo,
             &self.path_converter,
             &self.workspace_name,
@@ -1214,7 +1231,7 @@ impl WorkspaceCommandEnvironment {
             id_prefix_context,
             self.immutable_expression(),
             self.conflict_marker_style,
-            &self.command.data.commit_template_extensions,
+            &extensions,
         )
     }
 
@@ -1976,6 +1993,19 @@ to the current parents may contain changes from multiple commits.
     pub fn commit_template_language(&self) -> CommitTemplateLanguage<'_> {
         self.env
             .commit_template_language(self.repo().as_ref(), self.id_prefix_context())
+    }
+
+    /// Creates commit template language with extensions used only for one
+    /// command invocation.
+    pub fn commit_template_language_with_extensions<'a>(
+        &'a self,
+        extensions: &[&'a dyn CommitTemplateLanguageExtension],
+    ) -> CommitTemplateLanguage<'a> {
+        self.env.commit_template_language_with_extensions(
+            self.repo().as_ref(),
+            self.id_prefix_context(),
+            extensions,
+        )
     }
 
     /// Creates operation template language environment for this workspace.

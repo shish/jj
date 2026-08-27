@@ -147,6 +147,7 @@ if(commit.root(),
       commit.working_copies(),
       format_short_commit_id(commit.commit_id()),
       format_commit_labels(commit),
+      format_commit_review(commit),
       if(config("ui.show-cryptographic-signatures").as_boolean(),
         format_short_cryptographic_signature(commit.signature())
       ),
@@ -356,6 +357,7 @@ label(if(commit.current_working_copy(), "working_copy"),
       refs,
       separate(" ",
         format_commit_labels(commit),
+        format_commit_review(commit),
         if(commit.empty(), empty_commit_marker),
         if(commit.description(),
           commit.description().first_line(),
@@ -507,6 +509,64 @@ separate(" ",
 )
 '''
 
+'format_commit_review(commit)' = '''
+if(commit.review(), format_review(commit.review()))
+'''
+
+# Beyond this many checks, individual icons are replaced by a per-state summary
+# such as "3x✗ 6x✓".
+check_summary_threshold = '8'
+
+'format_review(review)' = '''
+label("review",
+  separate(" ",
+    hyperlink(review.url(), label(review.label(), review.state_name())),
+    if(review.checks().len() > check_summary_threshold,
+      format_check_summary(review.checks()),
+      format_check_list(review.checks())
+    ),
+    if(review.unresolved_comments() > 0,
+      label("comments", review.unresolved_comments() ++ "!"),
+    ),
+  )
+)
+'''
+
+'format_check_summary(checks)' = '''
+label("check",
+  separate(" ",
+    format_check_count(checks, "failed"),
+    format_check_count(checks, "in-progress"),
+    format_check_count(checks, "other"),
+    format_check_count(checks, "unknown"),
+    format_check_count(checks, "passed"),
+  )
+)
+'''
+
+'format_check_count(checks, state)' = '''
+if(checks.filter(|check| check.label() == state),
+  label(state,
+    checks.filter(|check| check.label() == state).len()
+    ++ checks.filter(|check| check.label() == state).first().icon()
+  )
+)
+'''
+
+'format_check_list(checks)' = '''
+label("check",
+  separate(" ",
+    checks.map(|check|
+      format_check(check)
+    )
+  )
+)
+'''
+
+'format_check(check)' = '''
+hyperlink(check.url(), label(check.label(), check.icon()))
+'''
+
 'format_short_commit_header(commit)' = '''
 separate(" ",
   format_short_change_id_with_change_offset(commit),
@@ -517,6 +577,7 @@ separate(" ",
   commit.working_copies(),
   format_short_commit_id(commit.commit_id()),
   format_commit_labels(commit),
+  format_commit_review(commit),
   if(config("ui.show-cryptographic-signatures").as_boolean(),
     format_short_cryptographic_signature(commit.signature())
   ),
@@ -542,6 +603,7 @@ separate(" ",
   commit.working_copies().map(|workspace| format_workspace_redacted(workspace)),
   format_short_commit_id(commit.commit_id()),
   format_commit_labels(commit),
+  format_commit_review(commit),
   if(config("ui.show-cryptographic-signatures").as_boolean(),
     format_short_cryptographic_signature(commit.signature())
   ),

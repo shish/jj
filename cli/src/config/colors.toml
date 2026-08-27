@@ -44,6 +44,22 @@
 "elided" = "bright black"
 "root" = "green"
 
+"review accepted" = "green"
+"review rejected" = "red"
+"review needs-review" = "yellow"
+"review draft" = "cyan"
+"review blocked" = "yellow"
+"review private" = "cyan"
+"review closed" = "bright black"
+"review other" = "yellow"
+"review comments" = "yellow"
+
+"check passed" = "green"
+"check failed" = "red"
+"check in-progress" = "yellow"
+"check other" = "blue"
+"check unknown" = "bright black"
+
 "working_copy" = { bold = true }
 "working_copy commit_id" = "bright blue"
 "working_copy change_id" = "bright magenta"

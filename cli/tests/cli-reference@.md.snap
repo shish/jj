@@ -38,6 +38,14 @@ This document contains the help content for the `jj` command-line program.
 * [`jj config set`↴](#jj-config-set)
 * [`jj config unset`↴](#jj-config-unset)
 * [`jj converge`↴](#jj-converge)
+* [`jj cr`↴](#jj-cr)
+* [`jj cr abandon`↴](#jj-cr-abandon)
+* [`jj cr download`↴](#jj-cr-download)
+* [`jj cr info`↴](#jj-cr-info)
+* [`jj cr list`↴](#jj-cr-list)
+* [`jj cr log`↴](#jj-cr-log)
+* [`jj cr rebase`↴](#jj-cr-rebase)
+* [`jj cr upload`↴](#jj-cr-upload)
 * [`jj describe`↴](#jj-describe)
 * [`jj diff`↴](#jj-diff)
 * [`jj diffedit`↴](#jj-diffedit)
@@ -159,6 +167,7 @@ To get started, see the tutorial [`jj help -k tutorial`].
 * `commit` — Update the description and create a new change on top [default alias: ci]
 * `config` — Manage config options
 * `converge` — Converge divergent changes
+* `cr` — Manage code reviews
 * `describe` — Update the change description or other metadata [default alias: desc]
 * `diff` — Compare file contents between two revisions
 * `diffedit` — Touch up the content changes in a revision with a diff editor
@@ -976,6 +985,125 @@ The modifications made by `jj converge` can be reviewed by `jj op show -p`. You 
 * `--no-interactive` — Do not prompt the user for help resolving divergence
 
    If the command cannot solve divergence automatically it will print a warning and exit without making any changes (divergence will still be present).
+
+
+
+## `jj cr`
+
+Manage code reviews
+
+**Usage:** `jj cr [OPTIONS] <COMMAND>`
+
+###### **Subcommands:**
+
+* `abandon` — Abandon/close a PR/CR/Diff on the forge
+* `download` — Download a PR/CR/Diff from the forge
+* `info` — Display information about a forge
+* `list` — List my open PRs/CRs/Diffs for the current project
+* `log` — Run `jj log` with annotated extra output for code review status
+* `rebase` — Pull from remote and rebase current stack
+* `upload` — Upload current stack to the forge
+
+###### **Options:**
+
+* `--remote <REMOTE>` — The remote to work with (only named remotes are supported)
+
+   This defaults to the `git.push` setting. If that is not configured, and if there are multiple remotes, the remote named "origin" will be used.
+* `--forge <FORGE>` — The forge backend to work with
+
+   This defaults to the `cr.forge` setting, or if neither is set, will try to detect the backend from the remote URL.
+
+  Possible values: `demo`
+
+
+
+
+## `jj cr abandon`
+
+Abandon/close a PR/CR/Diff on the forge
+
+**Usage:** `jj cr abandon [OPTIONS] <IDENTIFIER>`
+
+###### **Arguments:**
+
+* `<IDENTIFIER>` — PR/Diff/CR ID
+
+###### **Options:**
+
+* `-m`, `--message <MESSAGE>` — Optional message to include when abandoning/closing the review
+
+
+
+## `jj cr download`
+
+Download a PR/CR/Diff from the forge
+
+**Usage:** `jj cr download <IDENTIFIER>`
+
+###### **Arguments:**
+
+* `<IDENTIFIER>` — PR/Diff/CR ID
+
+
+
+## `jj cr info`
+
+Display information about a forge
+
+**Usage:** `jj cr info`
+
+
+
+## `jj cr list`
+
+List my open PRs/CRs/Diffs for the current project
+
+**Usage:** `jj cr list [OPTIONS]`
+
+###### **Options:**
+
+* `--json` — Output in JSON format
+
+
+
+## `jj cr log`
+
+Run `jj log` with annotated extra output for code review status
+
+**Usage:** `jj cr log`
+
+
+
+## `jj cr rebase`
+
+Pull from remote and rebase current stack
+
+**Usage:** `jj cr rebase [OPTIONS] [REVSET]`
+
+###### **Arguments:**
+
+* `<REVSET>` — Revset to rebase
+
+###### **Options:**
+
+* `-a`, `--all-prs` — Rebase all branches that have an associated CR; skip branches without one
+* `-A`, `--all-branches` — Rebase all branches; use the default merge target for those without a CR
+
+
+
+## `jj cr upload`
+
+Upload current stack to the forge
+
+**Usage:** `jj cr upload [OPTIONS]`
+
+###### **Options:**
+
+* `-r`, `--revision <REF>` — Ref to push
+
+  Default value: `stack()`
+* `--draft` [alias: `wip`] — Create as a draft/WIP
+* `-m`, `--message <MESSAGE>` — Commit/PR message
 
 
 

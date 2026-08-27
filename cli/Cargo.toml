@@ -64,6 +64,7 @@ harness = false
 
 [dependencies]
 ansi-to-tui = { workspace = true }
+base64 = { workspace = true }
 bstr = { workspace = true }
 chrono = { workspace = true }
 clap = { workspace = true }
@@ -71,6 +72,7 @@ clap-markdown = { workspace = true }
 clap_complete = { workspace = true }
 clap_complete_nushell = { workspace = true }
 clap_mangen = { workspace = true }
+comfy-table = { workspace = true }
 criterion = { workspace = true, optional = true }
 crossterm = { workspace = true }
 ctrlc = { workspace = true }
@@ -83,6 +85,7 @@ globset = { workspace = true }
 indexmap = { workspace = true }
 indoc = { workspace = true }
 itertools = { workspace = true }
+jj-core = { workspace = true }
 jj-lib = { workspace = true }
 maplit = { workspace = true }
 mimalloc = { workspace = true }
@@ -94,6 +97,7 @@ rand = { workspace = true }
 rand_chacha = { workspace = true }
 regex = { workspace = true }
 ratatui = { workspace = true }
+reqwest = { workspace = true }
 rpassword = { workspace = true }
 sapling-renderdag = { workspace = true }
 sapling-streampager = { workspace = true }
@@ -113,6 +117,7 @@ tracing = { workspace = true }
 tracing-chrome = { workspace = true }
 tracing-subscriber = { workspace = true }
 unicode-width = { workspace = true }
+url = { workspace = true }
 whoami = { workspace = true }
 percent-encoding = { workspace = true }
 

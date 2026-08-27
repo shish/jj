@@ -609,6 +609,7 @@ fn test_evolog_with_no_template() {
     - builtin_op_log_oneline
     - builtin_op_log_redacted
     - builtin_workspace_list
+    - check_summary_threshold
     - commit_summary_separator
     - default_commit_description
     - description_placeholder

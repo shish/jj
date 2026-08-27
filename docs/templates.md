@@ -259,6 +259,8 @@ This type cannot be printed. The following methods are defined.
 * `.committer() -> Signature`
 * `.signature() -> Option<CryptographicSignature>`: Cryptographic signature if
   the commit was signed.
+* `.review() -> Option<CodeReview>`: Code review information when available,
+  such as in forge-specific log commands.
 * `.mine() -> Boolean`: Commits where the author's email matches the email of
   the current user.
 * `.working_copies() -> List<WorkspaceRef>`: For multi-workspace repositories,
@@ -311,6 +313,32 @@ This type cannot be printed. The following methods are defined.
 * `.inter_diff([files: StringLiteral]) -> TreeDiff`: Changes between this commit and its
   predecessor version(s), rebased onto the parents of this commit to avoid unrelated
   changes (similar to `jj evolog -p`).
+
+### `CodeReview` type
+
+_Conversion: `Boolean`: no, `Serialize`: yes, `Template`: yes_
+
+The following methods are defined.
+
+* `.checks() -> List<Check>`: CI checks and submit requirements associated with
+  the review.
+
+### `Check` type
+
+_Conversion: `Boolean`: no, `Serialize`: yes, `Template`: yes_
+
+A CI check or submit requirement.
+
+The following methods are defined.
+
+* `.label() -> String`: Semantic state label, such as `passed`, `failed`, or
+  `in-progress`.
+* `.icon() -> String`: State icon, such as `✓`, `✗`, or `…`.
+* `.url() -> String`: URL for the check, or an empty string if unavailable.
+
+### `List<Check>` type
+
+See also the `List` type.
 
 ### `CommitId` type
 

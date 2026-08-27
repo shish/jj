@@ -46,5 +46,9 @@ trunk() | tags() | untracked_remote_bookmarks() | untracked_remote_tags()
 'immutable()' = '::(immutable_heads() | root())'
 'mutable()' = '~immutable()'
 
+# Mutable stack from trunk() up to and including @, excluding empty non-merge
+# commits. Intended as a sensible default for review-oriented workflows.
+'stack()' = 'trunk()..heads(::@ & mutable() & (~empty() | merges()))'
+
 'visible()' = '::visible_heads()'
 'hidden()' = '~visible()'

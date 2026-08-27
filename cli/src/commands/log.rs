@@ -39,6 +39,7 @@ use crate::cli_util::LogContentFormat;
 use crate::cli_util::RevisionArg;
 use crate::cli_util::format_template;
 use crate::command_error::CommandError;
+use crate::commit_templater::CommitTemplateLanguageExtension;
 use crate::complete;
 use crate::diff_util::DiffFormatArgs;
 use crate::formatter::FormatterExt as _;
@@ -69,7 +70,7 @@ use crate::ui::Ui;
 ///
 /// [customized]:
 ///     https://docs.jj-vcs.dev/latest/config/#node-style
-#[derive(clap::Args, Clone, Debug)]
+#[derive(clap::Args, Clone, Debug, Default)]
 pub(crate) struct LogArgs {
     /// Which revisions to show
     ///
@@ -135,6 +136,15 @@ pub(crate) async fn cmd_log(
     ui: &mut Ui,
     command: &CommandHelper,
     args: &LogArgs,
+) -> Result<(), CommandError> {
+    cmd_log_with_template_extensions(ui, command, args, &[]).await
+}
+
+pub(crate) async fn cmd_log_with_template_extensions(
+    ui: &mut Ui,
+    command: &CommandHelper,
+    args: &LogArgs,
+    extensions: &[&dyn CommitTemplateLanguageExtension],
 ) -> Result<(), CommandError> {
     let workspace_command = command.workspace_helper(ui).await?;
     let settings = workspace_command.settings();
@@ -207,7 +217,7 @@ pub(crate) async fn cmd_log(
     let template: TemplateRenderer<Commit>;
     let node_template: TemplateRenderer<Option<Commit>>;
     {
-        let language = workspace_command.commit_template_language();
+        let language = workspace_command.commit_template_language_with_extensions(extensions);
         let template_string = match &args.template {
             Some(value) => value.clone(),
             None => settings.get_string("templates.log")?,

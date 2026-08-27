@@ -25,6 +25,7 @@ mod test_config_command;
 mod test_config_schema;
 mod test_converge_command;
 mod test_copy_detection;
+mod test_cr;
 mod test_debug_command;
 mod test_debug_init_simple_command;
 mod test_describe_command;

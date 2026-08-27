@@ -667,6 +667,10 @@ for a comprehensive list.
   Note that modifying this will *not* change whether a commit is immutable.
   To do that, edit `immutable_heads()`.
 
+* `stack()`: The mutable stack from `trunk()` up to and including `@`, excluding
+  empty non-merge commits. By default this resolves to
+  `trunk()..heads(::@ & mutable() & (~empty() | merges()))`.
+
 * `visible()`: The set of visible commits. Resolves to `::visible_heads()`.
   This is equal to `all()` unless your revset includes
   [hidden revisions](#hidden-revisions).

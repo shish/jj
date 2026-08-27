@@ -122,7 +122,9 @@ pub fn maybe_add_gitignore(workspace_command: &WorkspaceCommandHelper) -> Result
     }
 }
 
-fn get_single_remote(store: &Store) -> Result<Option<RemoteNameBuf>, UnexpectedGitBackendError> {
+pub fn get_single_remote(
+    store: &Store,
+) -> Result<Option<RemoteNameBuf>, UnexpectedGitBackendError> {
     let mut names = git::get_all_remote_names(store)?;
     Ok(match names.len() {
         1 => names.pop(),
