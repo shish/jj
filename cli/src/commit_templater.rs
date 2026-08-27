@@ -68,6 +68,9 @@ use jj_lib::ref_name::WorkspaceNameBuf;
 use jj_lib::repo::Repo;
 use jj_lib::repo::RepoLoader;
 use jj_lib::repo_path::RepoPathBuf;
+use jj_lib::review::Check;
+use jj_lib::review::CodeReview;
+use jj_lib::review::CodeReviewLookup;
 use jj_lib::revset;
 use jj_lib::revset::Revset;
 use jj_lib::revset::RevsetContainingFn;
@@ -173,14 +176,36 @@ impl<'repo> CommitTemplateLanguage<'repo> {
         conflict_marker_style: ConflictMarkerStyle,
         extensions: &[impl AsRef<dyn CommitTemplateLanguageExtension>],
     ) -> Self {
+        let extensions = extensions.iter().map(AsRef::as_ref).collect_vec();
+        Self::new_with_extensions(
+            repo,
+            path_converter,
+            workspace_name,
+            revset_parse_context,
+            id_prefix_context,
+            immutable_expression,
+            conflict_marker_style,
+            &extensions,
+        )
+    }
+
+    #[expect(clippy::too_many_arguments)]
+    pub fn new_with_extensions(
+        repo: &'repo dyn Repo,
+        path_converter: &'repo RepoPathUiConverter,
+        workspace_name: &WorkspaceName,
+        revset_parse_context: RevsetParseContext<'repo>,
+        id_prefix_context: &'repo IdPrefixContext,
+        immutable_expression: Arc<UserRevsetExpression>,
+        conflict_marker_style: ConflictMarkerStyle,
+        extensions: &[&dyn CommitTemplateLanguageExtension],
+    ) -> Self {
         let mut build_fn_table = CommitTemplateBuildFnTable::builtin();
         let mut cache_extensions = ExtensionsMap::empty();
 
-        for extension in extensions {
-            build_fn_table.merge(extension.as_ref().build_fn_table());
-            extension
-                .as_ref()
-                .build_cache_extensions(&mut cache_extensions);
+        for &extension in extensions {
+            build_fn_table.merge(extension.build_fn_table());
+            extension.build_cache_extensions(&mut cache_extensions);
         }
 
         CommitTemplateLanguage {
@@ -263,6 +288,29 @@ impl<'repo> TemplateLanguage<'repo> for CommitTemplateLanguage<'repo> {
             }
             CommitTemplatePropertyKind::CommitList(property) => {
                 let table = &self.build_fn_table.commit_list_methods;
+                let build = template_parser::lookup_method(type_name, table, function)?;
+                build(self, diagnostics, build_ctx, property, function)
+            }
+            CommitTemplatePropertyKind::CodeReview(property) => {
+                let table = &self.build_fn_table.code_review_methods;
+                let build = template_parser::lookup_method(type_name, table, function)?;
+                build(self, diagnostics, build_ctx, property, function)
+            }
+            CommitTemplatePropertyKind::CodeReviewOpt(property) => {
+                let inner_property = property.try_unwrap(type_name).into_dyn_wrapped();
+                self.build_method(diagnostics, build_ctx, inner_property, function)
+            }
+            CommitTemplatePropertyKind::CheckOpt(property) => {
+                let inner_property = property.try_unwrap(type_name).into_dyn_wrapped();
+                self.build_method(diagnostics, build_ctx, inner_property, function)
+            }
+            CommitTemplatePropertyKind::Check(property) => {
+                let table = &self.build_fn_table.check_methods;
+                let build = template_parser::lookup_method(type_name, table, function)?;
+                build(self, diagnostics, build_ctx, property, function)
+            }
+            CommitTemplatePropertyKind::CheckList(property) => {
+                let table = &self.build_fn_table.check_list_methods;
                 let build = template_parser::lookup_method(type_name, table, function)?;
                 build(self, diagnostics, build_ctx, property, function)
             }
@@ -478,6 +526,7 @@ impl NoTemplateBooleanCast for DiffStatEntry {}
 impl NoTemplateBooleanCast for CryptographicSignature {}
 impl NoTemplateBooleanCast for AnnotationLine {}
 impl NoTemplateBooleanCast for Trailer {}
+impl NoTemplateBooleanCast for Check {}
 
 pub enum CommitTemplatePropertyKind<'repo> {
     Core(CoreTemplatePropertyKind<'repo>),
@@ -485,6 +534,11 @@ pub enum CommitTemplatePropertyKind<'repo> {
     Commit(BoxedTemplateProperty<'repo, Commit>),
     CommitOpt(BoxedTemplateProperty<'repo, Option<Commit>>),
     CommitList(BoxedTemplateProperty<'repo, Vec<Commit>>),
+    CodeReview(BoxedTemplateProperty<'repo, CodeReview>),
+    CodeReviewOpt(BoxedTemplateProperty<'repo, Option<CodeReview>>),
+    Check(BoxedTemplateProperty<'repo, Check>),
+    CheckOpt(BoxedTemplateProperty<'repo, Option<Check>>),
+    CheckList(BoxedTemplateProperty<'repo, Vec<Check>>),
     CommitEvolutionEntry(BoxedTemplateProperty<'repo, CommitEvolutionEntry>),
     CommitRef(BoxedTemplateProperty<'repo, Rc<CommitRef>>),
     CommitRefOpt(BoxedTemplateProperty<'repo, Option<Rc<CommitRef>>>),
@@ -526,6 +580,11 @@ template_builder::impl_property_wrappers!(<'repo> CommitTemplatePropertyKind<'re
     Commit(Commit),
     CommitOpt(Option<Commit>),
     CommitList(Vec<Commit>),
+    CodeReview(CodeReview),
+    CodeReviewOpt(Option<CodeReview>),
+    Check(Check),
+    CheckOpt(Option<Check>),
+    CheckList(Vec<Check>),
     CommitEvolutionEntry(CommitEvolutionEntry),
     CommitRef(Rc<CommitRef>),
     CommitRefOpt(Option<Rc<CommitRef>>),
@@ -581,6 +640,11 @@ impl<'repo> CoreTemplatePropertyVar<'repo> for CommitTemplatePropertyKind<'repo>
             Self::Commit(_) => "Commit",
             Self::CommitOpt(_) => "Option<Commit>",
             Self::CommitList(_) => "List<Commit>",
+            Self::CodeReview(_) => "CodeReview",
+            Self::CodeReviewOpt(_) => "Option<CodeReview>",
+            Self::Check(_) => "Check",
+            Self::CheckOpt(_) => "Option<Check>",
+            Self::CheckList(_) => "List<Check>",
             Self::CommitEvolutionEntry(_) => "CommitEvolutionEntry",
             Self::CommitRef(_) => "CommitRef",
             Self::CommitRefOpt(_) => "Option<CommitRef>",
@@ -644,6 +708,11 @@ impl<'repo> CoreTemplatePropertyVar<'repo> for CommitTemplatePropertyKind<'repo>
             Self::Commit(_) => Err(self),
             Self::CommitOpt(property) => Ok(option_to_boolean(property)),
             Self::CommitList(property) => Ok(list_to_boolean(property)),
+            Self::CodeReview(_) => Err(self),
+            Self::CodeReviewOpt(property) => Ok(option_to_boolean(property)),
+            Self::Check(_) => Err(self),
+            Self::CheckOpt(property) => Ok(option_to_boolean(property)),
+            Self::CheckList(property) => Ok(list_to_boolean(property)),
             Self::CommitEvolutionEntry(_) => Err(self),
             Self::CommitRef(_) => Err(self),
             Self::CommitRefOpt(property) => Ok(option_to_boolean(property)),
@@ -705,6 +774,11 @@ impl<'repo> CoreTemplatePropertyVar<'repo> for CommitTemplatePropertyKind<'repo>
             Self::Commit(property) => Some(property.into_serialize()),
             Self::CommitOpt(property) => Some(property.into_serialize()),
             Self::CommitList(property) => Some(property.into_serialize()),
+            Self::CodeReview(property) => Some(property.into_serialize()),
+            Self::CodeReviewOpt(property) => Some(property.into_serialize()),
+            Self::Check(property) => Some(property.into_serialize()),
+            Self::CheckOpt(property) => Some(property.into_serialize()),
+            Self::CheckList(property) => Some(property.into_serialize()),
             Self::CommitEvolutionEntry(property) => Some(property.into_serialize()),
             Self::CommitRef(property) => Some(property.into_serialize()),
             Self::CommitRefOpt(property) => Some(property.into_serialize()),
@@ -748,6 +822,11 @@ impl<'repo> CoreTemplatePropertyVar<'repo> for CommitTemplatePropertyKind<'repo>
             Self::Commit(_) => None,
             Self::CommitOpt(_) => None,
             Self::CommitList(_) => None,
+            Self::CodeReview(_) => None,
+            Self::CodeReviewOpt(_) => None,
+            Self::Check(_) => None,
+            Self::CheckOpt(_) => None,
+            Self::CheckList(_) => None,
             Self::CommitEvolutionEntry(_) => None,
             Self::CommitRef(property) => Some(property.into_template()),
             Self::CommitRefOpt(property) => Some(property.into_template()),
@@ -824,6 +903,11 @@ impl<'repo> CoreTemplatePropertyVar<'repo> for CommitTemplatePropertyKind<'repo>
             (Self::Commit(_), _) => None,
             (Self::CommitOpt(_), _) => None,
             (Self::CommitList(_), _) => None,
+            (Self::CodeReview(_), _) => None,
+            (Self::CodeReviewOpt(_), _) => None,
+            (Self::Check(_), _) => None,
+            (Self::CheckOpt(_), _) => None,
+            (Self::CheckList(_), _) => None,
             (Self::CommitEvolutionEntry(_), _) => None,
             (Self::CommitRef(_), _) => None,
             (Self::CommitRefOpt(_), _) => None,
@@ -873,6 +957,11 @@ impl<'repo> CoreTemplatePropertyVar<'repo> for CommitTemplatePropertyKind<'repo>
             (Self::Commit(_), _) => None,
             (Self::CommitOpt(_), _) => None,
             (Self::CommitList(_), _) => None,
+            (Self::CodeReview(_), _) => None,
+            (Self::CodeReviewOpt(_), _) => None,
+            (Self::Check(_), _) => None,
+            (Self::CheckOpt(_), _) => None,
+            (Self::CheckList(_), _) => None,
             (Self::CommitEvolutionEntry(_), _) => None,
             (Self::CommitRef(_), _) => None,
             (Self::CommitRefOpt(_), _) => None,
@@ -922,6 +1011,9 @@ pub struct CommitTemplateBuildFnTable<'repo> {
     pub operation: OperationTemplateBuildFnTable<'repo, CommitTemplateLanguage<'repo>>,
     pub commit_methods: CommitTemplateBuildMethodFnMap<'repo, Commit>,
     pub commit_list_methods: CommitTemplateBuildMethodFnMap<'repo, Vec<Commit>>,
+    pub code_review_methods: CommitTemplateBuildMethodFnMap<'repo, CodeReview>,
+    pub check_methods: CommitTemplateBuildMethodFnMap<'repo, Check>,
+    pub check_list_methods: CommitTemplateBuildMethodFnMap<'repo, Vec<Check>>,
     pub commit_evolution_entry_methods: CommitTemplateBuildMethodFnMap<'repo, CommitEvolutionEntry>,
     pub commit_ref_methods: CommitTemplateBuildMethodFnMap<'repo, Rc<CommitRef>>,
     pub commit_ref_list_methods: CommitTemplateBuildMethodFnMap<'repo, Vec<Rc<CommitRef>>>,
@@ -954,6 +1046,9 @@ impl CommitTemplateBuildFnTable<'_> {
             operation: OperationTemplateBuildFnTable::empty(),
             commit_methods: HashMap::new(),
             commit_list_methods: HashMap::new(),
+            code_review_methods: HashMap::new(),
+            check_methods: HashMap::new(),
+            check_list_methods: HashMap::new(),
             commit_evolution_entry_methods: HashMap::new(),
             commit_ref_methods: HashMap::new(),
             commit_ref_list_methods: HashMap::new(),
@@ -985,6 +1080,9 @@ impl CommitTemplateBuildFnTable<'_> {
             operation,
             commit_methods,
             commit_list_methods,
+            code_review_methods,
+            check_methods,
+            check_list_methods,
             commit_evolution_entry_methods,
             commit_ref_methods,
             commit_ref_list_methods,
@@ -1013,6 +1111,9 @@ impl CommitTemplateBuildFnTable<'_> {
         self.operation.merge(operation);
         merge_fn_map(&mut self.commit_methods, commit_methods);
         merge_fn_map(&mut self.commit_list_methods, commit_list_methods);
+        merge_fn_map(&mut self.code_review_methods, code_review_methods);
+        merge_fn_map(&mut self.check_methods, check_methods);
+        merge_fn_map(&mut self.check_list_methods, check_list_methods);
         merge_fn_map(
             &mut self.commit_evolution_entry_methods,
             commit_evolution_entry_methods,
@@ -1064,6 +1165,9 @@ impl CommitTemplateBuildFnTable<'_> {
             operation: OperationTemplateBuildFnTable::builtin(),
             commit_methods: builtin_commit_methods(),
             commit_list_methods: template_builder::builtin_unformattable_list_methods(),
+            code_review_methods: builtin_code_review_methods(),
+            check_methods: builtin_check_methods(),
+            check_list_methods: template_builder::builtin_unformattable_list_methods(),
             commit_evolution_entry_methods: builtin_commit_evolution_entry_methods(),
             commit_ref_methods: builtin_commit_ref_methods(),
             commit_ref_list_methods: template_builder::builtin_formattable_list_methods(),
@@ -1290,6 +1394,19 @@ fn builtin_commit_methods<'repo>() -> CommitTemplateBuildMethodFnMap<'repo, Comm
         |_language, _diagnostics, _build_ctx, self_property, function| {
             function.expect_no_arguments()?;
             let out_property = self_property.map(CryptographicSignature::new);
+            Ok(out_property.into_dyn_wrapped())
+        },
+    );
+    map.insert(
+        "review",
+        |language, _diagnostics, _build_ctx, self_property, function| {
+            function.expect_no_arguments()?;
+            let lookup = language.cache_extension::<CodeReviewLookup>().cloned();
+            let out_property = self_property.map(move |commit| {
+                lookup
+                    .as_ref()
+                    .and_then(|lookup| lookup.review(commit.id()))
+            });
             Ok(out_property.into_dyn_wrapped())
         },
     );
@@ -1561,6 +1678,81 @@ fn builtin_commit_methods<'repo>() -> CommitTemplateBuildMethodFnMap<'repo, Comm
             let repo = language.repo;
             let out_property =
                 self_property.map(|commit| commit.id() == repo.store().root_commit_id());
+            Ok(out_property.into_dyn_wrapped())
+        },
+    );
+    map
+}
+
+fn builtin_code_review_methods<'repo>() -> CommitTemplateBuildMethodFnMap<'repo, CodeReview> {
+    let mut map = CommitTemplateBuildMethodFnMap::<CodeReview>::new();
+    map.insert(
+        "state_name",
+        |_language, _diagnostics, _build_ctx, self_property, function| {
+            function.expect_no_arguments()?;
+            let out_property = self_property.map(|review| review.state_name.clone());
+            Ok(out_property.into_dyn_wrapped())
+        },
+    );
+    map.insert(
+        "label",
+        |_language, _diagnostics, _build_ctx, self_property, function| {
+            function.expect_no_arguments()?;
+            let out_property = self_property.map(|review| review.clone().label().to_owned());
+            Ok(out_property.into_dyn_wrapped())
+        },
+    );
+    map.insert(
+        "url",
+        |_language, _diagnostics, _build_ctx, self_property, function| {
+            function.expect_no_arguments()?;
+            let out_property = self_property.map(|review| review.url.to_string().clone());
+            Ok(out_property.into_dyn_wrapped())
+        },
+    );
+    map.insert(
+        "checks",
+        |_language, _diagnostics, _build_ctx, self_property, function| {
+            function.expect_no_arguments()?;
+            let out_property = self_property.map(|review| review.checks);
+            Ok(out_property.into_dyn_wrapped())
+        },
+    );
+    map.insert(
+        "unresolved_comments",
+        |_language, _diagnostics, _build_ctx, self_property, function| {
+            function.expect_no_arguments()?;
+            let out_property = self_property.map(|review| review.unresolved_comments);
+            Ok(out_property.into_dyn_wrapped())
+        },
+    );
+    map
+}
+
+fn builtin_check_methods<'repo>() -> CommitTemplateBuildMethodFnMap<'repo, Check> {
+    let mut map = CommitTemplateBuildMethodFnMap::<Check>::new();
+    map.insert(
+        "label",
+        |_language, _diagnostics, _build_ctx, self_property, function| {
+            function.expect_no_arguments()?;
+            let out_property = self_property.map(|check| check.label().to_owned());
+            Ok(out_property.into_dyn_wrapped())
+        },
+    );
+    map.insert(
+        "icon",
+        |_language, _diagnostics, _build_ctx, self_property, function| {
+            function.expect_no_arguments()?;
+            let out_property = self_property.map(|check| check.icon().to_owned());
+            Ok(out_property.into_dyn_wrapped())
+        },
+    );
+    map.insert(
+        "url",
+        |_language, _diagnostics, _build_ctx, self_property, function| {
+            function.expect_no_arguments()?;
+            let out_property = self_property
+                .map(|check| check.url.map_or_else(String::new, |url| url.to_string()));
             Ok(out_property.into_dyn_wrapped())
         },
     );
@@ -3237,12 +3429,16 @@ mod tests {
     use std::path::PathBuf;
 
     use jiff::tz::TimeZone;
+    use url::Url;
+
     use jj_lib::backend::CopyId;
     use jj_lib::backend::FileId;
     use jj_lib::backend::SymlinkId;
     use jj_lib::config::ConfigLayer;
     use jj_lib::config::ConfigSource;
     use jj_lib::fileset::FilesetAliasesMap;
+    use jj_lib::review::CheckState;
+    use jj_lib::review::CodeReviewState;
     use jj_lib::revset::RevsetAliasesMap;
     use jj_lib::revset::RevsetExpression;
     use jj_lib::revset::RevsetExtensions;
@@ -3459,6 +3655,39 @@ mod tests {
 
         // JSON
         insta::assert_snapshot!(env.render_ok("json(self)", &sym("foo bar")), @r#""foo bar""#);
+    }
+
+    #[test]
+    fn test_code_review_check_types() {
+        let env = CommitTemplateTestEnv::init();
+        let review = CodeReview {
+            id: "1".to_owned(),
+            title: "Example".to_owned(),
+            url: Url::parse("https://example.com/reviews/1").unwrap(),
+            version: None,
+            state_name: "Accepted".to_owned(),
+            state: CodeReviewState::Accepted,
+            checks: vec![
+                Check {
+                    name: "Lint".to_owned(),
+                    url: None,
+                    state: CheckState::Pass,
+                },
+                Check {
+                    name: "Build".to_owned(),
+                    url: Some(Url::parse("https://example.com/checks/build").unwrap()),
+                    state: CheckState::Fail,
+                },
+            ],
+            unresolved_comments: 0,
+        };
+
+        insta::assert_snapshot!(env.render_ok("self.checks().first().label()", &review), @"passed");
+        insta::assert_snapshot!(env.render_ok("self.checks().last().icon()", &review), @"✗");
+        insta::assert_snapshot!(
+            env.render_ok("json(self.checks())", &review),
+            @r#"[{"name":"Lint","url":null,"state":"Pass"},{"name":"Build","url":"https://example.com/checks/build","state":"Fail"}]"#
+        );
     }
 
     #[test]
