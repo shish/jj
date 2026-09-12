@@ -1,8 +1,8 @@
-use crate::common::phabricator::PhabricatorTestRepo;
+use crate::common::forgejo::ForgejoTestRepo;
 
 #[test]
 fn test_list_empty() {
-    let Some(repo) = PhabricatorTestRepo::maybe_new() else {
+    let Some(repo) = ForgejoTestRepo::maybe_new() else {
         return;
     };
 

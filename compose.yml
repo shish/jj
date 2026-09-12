@@ -14,6 +14,49 @@ services:
       interval: 120s
       timeout: 5s
 
+  # Forgejo
+  forgejo:
+    image: codeberg.org/forgejo/forgejo:16
+    ports:
+      - "8082:3000"
+    environment:
+      FORGEJO__server__ROOT_URL: "http://forgejo.localhost:8082/"
+      FORGEJO__security__INSTALL_LOCK: "true"
+    working_dir: /data
+    healthcheck:
+      # Wait until the server is up *and* the post_start-generated API token
+      # exists and authenticates against the API.
+      test:
+        - CMD-SHELL
+        - >-
+          curl --silent -f -o /dev/null http://localhost:3000/api/healthz &&
+          test -s /data/api-key &&
+          curl --silent -f -o /dev/null
+          -H "Authorization: token $$(awk '{print $$NF}' /data/api-key)"
+          http://localhost:3000/api/v1/user
+      start_period: 120s
+      start_interval: 10s
+      interval: 120s
+      timeout: 5s
+    post_start:
+      - command:
+          - sh
+          - -ec
+          - |
+            sleep 5
+            su git -s /bin/sh -c 'forgejo admin user create \
+              --username admin2 \
+              --password secret \
+              --email admin2@forgejo.localhost \
+              --admin \
+              --must-change-password=false'
+            su git -s /bin/sh -c 'forgejo admin user generate-access-token \
+              --username admin2 \
+              --token-name jj-api \
+              --scopes all \
+              ' > api-key
+            chmod 600 api-key
+
   # Phabricator
   phabricator-mysql:
     image: mysql:8.0
@@ -71,3 +114,6 @@ services:
             php /scripts/phab-init.php
             # start backend daemons
             runuser -u www-data bin/phd start
+
+volumes:
+  forgejo-data:

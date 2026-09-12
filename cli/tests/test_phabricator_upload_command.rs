@@ -26,7 +26,7 @@ fn test_push_one_head() {
         .expect("`jj cr list --json` should return an array");
     assert_eq!(revisions.len(), 1);
     assert_eq!(revisions[0]["title"].as_str(), Some("Test commit 1"));
-    assert_eq!(revisions[0]["state"]["name"].as_str(), Some("Needs Review"));
+    assert_eq!(revisions[0]["state_name"].as_str(), Some("Needs Review"));
 }
 
 #[test]
@@ -44,7 +44,7 @@ fn test_push_one_head_draft() {
         .expect("`jj cr list --json` should return an array");
     assert_eq!(revisions.len(), 1);
     assert_eq!(revisions[0]["title"].as_str(), Some("Test commit 1"));
-    assert_eq!(revisions[0]["state"]["name"].as_str(), Some("Draft"));
+    assert_eq!(revisions[0]["state_name"].as_str(), Some("Draft"));
 }
 
 #[test]

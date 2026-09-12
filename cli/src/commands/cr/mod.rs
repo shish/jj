@@ -146,6 +146,10 @@ pub async fn cmd_cr(
             Ok(())
         }
         // Abandon
+        (CrCommand::Abandon(args), ForgeBackend::Forgejo) => {
+            crate::commands::forgejo::abandon::cmd_forgejo_abandon(ui, command, &remote_name, args)
+                .await
+        }
         (CrCommand::Abandon(args), ForgeBackend::Gerrit) => {
             crate::commands::gerrit::abandon::cmd_gerrit_abandon(ui, command, &remote_name, args)
                 .await
@@ -168,6 +172,15 @@ pub async fn cmd_cr(
             format!("cr abandon not implemented for {backend:?}"),
         )),
         // Download
+        (CrCommand::Download(args), ForgeBackend::Forgejo) => {
+            crate::commands::forgejo::download::cmd_forgejo_download(
+                ui,
+                command,
+                &remote_name,
+                args,
+            )
+            .await
+        }
         (CrCommand::Download(args), ForgeBackend::Gerrit) => {
             crate::commands::gerrit::download::cmd_gerrit_download(ui, command, &remote_name, args)
                 .await
@@ -191,6 +204,9 @@ pub async fn cmd_cr(
         )),
         // List
         (CrCommand::List(args), ForgeBackend::Demo) => self::demo::cmd_list(ui, args),
+        (CrCommand::List(args), ForgeBackend::Forgejo) => {
+            crate::commands::forgejo::list::cmd_forgejo_list(ui, command, &remote_name, args).await
+        }
         (CrCommand::List(args), ForgeBackend::GitHub) => {
             crate::commands::github::list::cmd_github_list(ui, command, &remote_name, args).await
         }
@@ -208,6 +224,9 @@ pub async fn cmd_cr(
         }
         // Log
         (CrCommand::Log(args), ForgeBackend::Demo) => self::demo::cmd_log(ui, command, args).await,
+        (CrCommand::Log(args), ForgeBackend::Forgejo) => {
+            crate::commands::forgejo::log::cmd_forgejo_log(ui, command, &remote_name, args).await
+        }
         (CrCommand::Log(args), ForgeBackend::Gerrit) => {
             crate::commands::gerrit::log::cmd_gerrit_log(ui, command, &remote_name, args).await
         }
@@ -219,6 +238,10 @@ pub async fn cmd_cr(
                 .await
         }
         // Rebase
+        (CrCommand::Rebase(args), ForgeBackend::Forgejo) => {
+            crate::commands::forgejo::rebase::cmd_forgejo_rebase(ui, command, &remote_name, args)
+                .await
+        }
         (CrCommand::Rebase(args), ForgeBackend::Gerrit) => {
             crate::commands::gerrit::rebase::cmd_gerrit_rebase(ui, command, &remote_name, args)
                 .await
@@ -241,6 +264,10 @@ pub async fn cmd_cr(
             format!("cr rebase not implemented for {backend:?}"),
         )),
         // Upload
+        (CrCommand::Upload(args), ForgeBackend::Forgejo) => {
+            crate::commands::forgejo::upload::cmd_forgejo_upload(ui, command, &remote_name, args)
+                .await
+        }
         (CrCommand::Upload(args), ForgeBackend::Gerrit) => {
             crate::commands::gerrit::upload2::cmd_gerrit_upload2(ui, command, &remote_name, args)
                 .await

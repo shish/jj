@@ -34,6 +34,7 @@ const DEFAULT_REMOTE: &RemoteName = RemoteName::new("origin");
 #[derive(Clone, ContentHash, Debug, Eq, Hash, Ord, PartialEq, PartialOrd, clap::ValueEnum)]
 pub enum ForgeBackend {
     Demo,
+    Forgejo,
     Gerrit,
     #[value(name = "github")]
     GitHub,
@@ -108,6 +109,11 @@ pub async fn get_forge(
         return Ok(ForgeBackend::GitHub);
     } else if remote_host.contains("phab") {
         return Ok(ForgeBackend::Phabricator);
+    } else if remote_host.contains("forgejo")
+        || remote_host.contains("gitea")
+        || remote_host.ends_with("codeberg.org")
+    {
+        return Ok(ForgeBackend::Forgejo);
     }
 
     Err(CommandError::new(

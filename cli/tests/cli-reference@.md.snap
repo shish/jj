@@ -61,6 +61,13 @@ This document contains the help content for the `jj` command-line program.
 * [`jj file track`↴](#jj-file-track)
 * [`jj file untrack`↴](#jj-file-untrack)
 * [`jj fix`↴](#jj-fix)
+* [`jj forgejo`↴](#jj-forgejo)
+* [`jj forgejo abandon`↴](#jj-forgejo-abandon)
+* [`jj forgejo download`↴](#jj-forgejo-download)
+* [`jj forgejo list`↴](#jj-forgejo-list)
+* [`jj forgejo log`↴](#jj-forgejo-log)
+* [`jj forgejo rebase`↴](#jj-forgejo-rebase)
+* [`jj forgejo upload`↴](#jj-forgejo-upload)
 * [`jj gerrit`↴](#jj-gerrit)
 * [`jj gerrit abandon`↴](#jj-gerrit-abandon)
 * [`jj gerrit download`↴](#jj-gerrit-download)
@@ -195,6 +202,7 @@ To get started, see the tutorial [`jj help -k tutorial`].
 * `evolog` — Show how a change has evolved over time
 * `file` — File operations
 * `fix` — Update files with formatting fixes or other changes
+* `forgejo` — Interact with Forgejo Code Reviews
 * `gerrit` — Interact with Gerrit Code Review
 * `git` — Commands for working with Git remotes and the underlying Git repo
 * `github` — Interact with GitHub Code Reviews
@@ -1034,7 +1042,7 @@ Manage code reviews
 
    This defaults to the `cr.forge` setting, or if neither is set, will try to detect the backend from the remote URL.
 
-  Possible values: `demo`, `gerrit`, `github`, `phabricator`
+  Possible values: `demo`, `forgejo`, `gerrit`, `github`, `phabricator`
 
 
 
@@ -1657,6 +1665,110 @@ configuration.
 * `-a`, `--all-lines` — Format all lines instead of only modified lines.
 
    If the formatter doesn't support formatting only modified lines, then this option has no effect since the formatter always formats all lines.
+
+
+
+## `jj forgejo`
+
+Interact with Forgejo Code Reviews
+
+**Usage:** `jj forgejo [OPTIONS] <COMMAND>`
+
+###### **Subcommands:**
+
+* `abandon` — Abandon/close a PR/CR/Diff on the forge
+* `download` — Download a PR/CR/Diff from the forge
+* `list` — List my open PRs/CRs/Diffs for the current project
+* `log` — Run `jj log` with annotated extra output for code review status
+* `rebase` — Pull from remote and rebase current stack
+* `upload` — Upload current stack to the forge
+
+###### **Options:**
+
+* `--remote <REMOTE>` — The remote to work with (only named remotes are supported)
+
+   This defaults to the `git.push` setting. If that is not configured, and if there are multiple remotes, the remote named "origin" will be used.
+
+
+
+## `jj forgejo abandon`
+
+Abandon/close a PR/CR/Diff on the forge
+
+**Usage:** `jj forgejo abandon [OPTIONS] <IDENTIFIER>`
+
+###### **Arguments:**
+
+* `<IDENTIFIER>` — PR/Diff/CR ID
+
+###### **Options:**
+
+* `-m`, `--message <MESSAGE>` — Optional message to include when abandoning/closing the review
+
+
+
+## `jj forgejo download`
+
+Download a PR/CR/Diff from the forge
+
+**Usage:** `jj forgejo download <IDENTIFIER>`
+
+###### **Arguments:**
+
+* `<IDENTIFIER>` — PR/Diff/CR ID
+
+
+
+## `jj forgejo list`
+
+List my open PRs/CRs/Diffs for the current project
+
+**Usage:** `jj forgejo list [OPTIONS]`
+
+###### **Options:**
+
+* `--json` — Output in JSON format
+
+
+
+## `jj forgejo log`
+
+Run `jj log` with annotated extra output for code review status
+
+**Usage:** `jj forgejo log`
+
+
+
+## `jj forgejo rebase`
+
+Pull from remote and rebase current stack
+
+**Usage:** `jj forgejo rebase [OPTIONS] [REVSET]`
+
+###### **Arguments:**
+
+* `<REVSET>` — Revset to rebase
+
+###### **Options:**
+
+* `-a`, `--all-prs` — Rebase all branches that have an associated CR; skip branches without one
+* `-A`, `--all-branches` — Rebase all branches; use the default merge target for those without a CR
+
+
+
+## `jj forgejo upload`
+
+Upload current stack to the forge
+
+**Usage:** `jj forgejo upload [OPTIONS]`
+
+###### **Options:**
+
+* `-r`, `--revision <REF>` — Ref to push
+
+  Default value: `stack()`
+* `--draft` [alias: `wip`] — Create as a draft/WIP
+* `-m`, `--message <MESSAGE>` — Commit/PR message
 
 
 
