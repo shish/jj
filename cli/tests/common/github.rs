@@ -200,6 +200,7 @@ impl GitHubTestRepo {
     }
 
     fn clone_dir(&self) -> TestWorkDir<'_> {
+        self.env.work_dir("").create_dir_all("clone");
         self.env.work_dir("clone")
     }
 

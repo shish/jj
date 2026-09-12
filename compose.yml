@@ -7,6 +7,15 @@ services:
       - "127.0.0.1:8080:8080"
       - "127.0.0.1:29418:29418"
 
+  # Forgejo
+  forgejo:
+    build:
+      context: ./forges/forgejo
+    ports:
+      - "127.0.0.1:8082:3000"
+    post_start:
+      - command: sh /scripts/init.sh
+
   # Phabricator
   phabricator-mysql:
     build:
