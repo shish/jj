@@ -33,6 +33,8 @@ mod evolog;
 mod file;
 mod fix;
 #[cfg(feature = "git")]
+mod forgejo;
+#[cfg(feature = "git")]
 mod gerrit;
 #[cfg(feature = "git")]
 mod git;
@@ -131,6 +133,8 @@ enum Command {
     File(file::FileCommand),
     Fix(fix::FixArgs),
     #[cfg(feature = "git")]
+    Forgejo(forgejo::ForgejoArgs),
+    #[cfg(feature = "git")]
     Gerrit(gerrit::GerritArgs),
     #[cfg(feature = "git")]
     #[command(subcommand)]
@@ -204,6 +208,8 @@ pub async fn run_command(ui: &mut Ui, command_helper: &CommandHelper) -> Result<
         Command::Evolog(args) => evolog::cmd_evolog(ui, command_helper, args).await,
         Command::File(args) => file::cmd_file(ui, command_helper, args).await,
         Command::Fix(args) => fix::cmd_fix(ui, command_helper, args).await,
+        #[cfg(feature = "git")]
+        Command::Forgejo(args) => forgejo::cmd_forgejo(ui, command_helper, args).await,
         #[cfg(feature = "git")]
         Command::Gerrit(sub_args) => gerrit::cmd_gerrit(ui, command_helper, sub_args).await,
         #[cfg(feature = "git")]

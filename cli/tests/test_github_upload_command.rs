@@ -17,7 +17,7 @@ fn test_push_one_head() {
     let list = run_jj_json(&env, ["cr", "list", "--json"]);
     let prs = list.as_array().expect("expected JSON array from cr list");
     assert_eq!(prs.len(), 1);
-    assert_eq!(prs[0]["title"]["text"].as_str(), Some("Test commit 1"));
+    assert_eq!(prs[0]["title"].as_str(), Some("Test commit 1"));
 }
 
 #[test]
@@ -34,7 +34,7 @@ fn test_push_one_cwd() {
     let list = run_jj_json(&env, ["cr", "list", "--json"]);
     let prs = list.as_array().expect("expected JSON array from cr list");
     assert_eq!(prs.len(), 1);
-    assert_eq!(prs[0]["title"]["text"].as_str(), Some("Test commit 1"));
+    assert_eq!(prs[0]["title"].as_str(), Some("Test commit 1"));
 }
 
 #[test]
@@ -56,7 +56,7 @@ fn test_push_one_then_two() {
     let list = run_jj_json(&env, ["cr", "list", "--json"]);
     let prs = list.as_array().expect("expected JSON array from cr list");
     assert_eq!(prs.len(), 1);
-    assert_eq!(prs[0]["title"]["text"].as_str(), Some("Test commit 1"));
+    assert_eq!(prs[0]["title"].as_str(), Some("Test commit 1"));
 }
 
 #[test]
@@ -78,5 +78,5 @@ fn test_push_two_at_once() {
     let list = run_jj_json(&env, ["cr", "list", "--json"]);
     let prs = list.as_array().expect("expected JSON array from cr list");
     assert_eq!(prs.len(), 1);
-    assert_eq!(prs[0]["title"]["text"].as_str(), Some("Test commit 2"));
+    assert_eq!(prs[0]["title"].as_str(), Some("Test commit 2"));
 }
