@@ -1,3 +1,103 @@
+# JJ with Code Review Integration
+
+(For GitHub, Gerrit, Phabricator, and Forgejo; it should be easy to add more)
+
+# Features
+
+* `jj cr upload` - create or update a code review for each commit in the current branch (1 change : 1 review)
+* `jj cr rebase` - rebase the current branch on top of its merge target (eg if the PR is based on `main`, rebase on top of `main`; if the PR is based on another PR, rebase on top of that other PR)
+* `jj cr list` - list the status of my open PRs/CRs/Diffs
+* `jj cr log` - show `jj log` output annotated with review status
+* `jj cr download <pr/cr/diff>` - download a specific PR/CR/Diff from the forge
+
+<p><img title="log demo" src="docs/images/log-demo.png"></p>
+
+<p><img title="list demo" src="docs/images/list-demo.png"></p>
+
+
+# Stability Notice
+
+Right now my #1 goal is "have something which works for me and my workflows", and I haven't settled on exactly what the interface should look like, so parts may change, internally and externally (eg command names). If other people are interested in this work, let me know and I'll take stability more seriously. If lots of other people are interested, then I'll try to get it polished enough to be considered upstream.
+
+Also for as long as I'm the only person looking at this repo, I'm making liberal use of `jj split` and `jj absorb` to rewrite history so that each layer of the code gets its own commit, as well as rebasing the `jj-cr` branch on top of upstream's `main` branch. Again, if anybody has any interest in collaborating, let me know and I'll switch to a more normal workflow where the foundations aren't constantly-shifting :)
+
+# Why is this useful?
+
+Because I'm regularly using github, gerrit, and phabricator, and I don't like any of their standard `git` workflows (and then I go ahead and use `jj`, which has *much* better client-side UX, but the forge integrations are even less-well-supported...)
+
+I really just want `jj cr rebase` to bring me up to date with remote changes, and `jj cr upload` to submit my local changes for review - automatically Doing The Right Thing (eg updating existing reviews vs creating new ones), working consistently across forges.
+
+# Workflow
+
+* `jj cr rebase --all-branches` - start the day by pulling remote changes and rebasing all my local branches on top of them
+* `jj cr list` / `jj cr log` - check for any reviews which need attention
+
+## If I want to work on a new feature
+
+* `jj new 'trunk()'` - create a new branch off of trunk (ie, `main` or `master`)
+* `vim ...` - make some changes
+* `jj commit` - commit the first unit of work
+* `vim ...` - make more changes
+* `jj commit` - commit the next unit of work
+* `jj cr upload` - upload the two commits for review
+
+## If any of my code needs to be changed based on feedback
+
+* `jj edit <change id>` - switch to the change that needs to be fixed
+* `vim ...` - make the changes
+* `jj cr upload -m 'fixed the bugs'` - upload an updated version of the commit for review, with a comment listing what changed since last time
+
+## If I want to test somebody else's code
+
+* `jj cr download <pr/cr/diff>` - download a specific PR/CR/Diff from the forge
+
+# Backend Notes
+
+* Backend will be automatically detected based on the git remote URL (eg github.com = use the github backend, codeberg.org = use the forgejo backend)
+* If that doesn't work, you can set the backend explicitly with `jj config set --repo cr.forge <backend>`
+* You can also skip the forge abstraction layer, replacing eg the lowest-common-denominator `jj cr upload` with the more flexible gerrit-specific `jj gerrit upload`
+
+# Technical Notes
+
+These are a set of patches on top of the upstream Jujutsu repository, because:
+
+* The first proof-of-concept was a python wrapper around jj, and it felt very hacky
+* I tried making a stand-alone rust binary which uses `jj_lib` as a dependency, but that seemed very low-level, and I didn't want to re-implement all of the `jj_cli` scaffolding for myself
+* I tried using `jj_cli`'s built-in extension points (eg `add_subcommand`) but ran into a few things that I wanted to extend but there's no pre-existing mechanism for it
+* I figure if I'm going to be hacking the `jj_cli` crate to add extension points, I might as well have my hacks and the features in the same repo to keep them in sync
+* The JJ maintainers appear (as I understand it) to be feeling overall positive towards the broad concept of "forge integrations included in jj".
+  * I've rushed ahead and written the code as a proof-of-concept that supports my own workflow, instead of taking the time to write up an RFC and gather feedback and carefully design a solution which supports _everybody's_ workflows, so I don't expect that this code will be merged as-is - but it might be useful as a reference for how jj-native forge-integrations _could_ be implemented.
+
+## Overall design decisions
+
+(Design decisions relevant to specific backends will be comments in the code for that backend)
+
+### Common-ish interface for forge backends
+
+* eg `jj gerrit abandon` and `jj phabricator abandon` and `jj github abandon` - even though github calls it "closing" a PR and not "abandoning", I personally think it's nicer for jj to be internally-consistent rather than consistent with each forge (who all use very different terminology, sometimes mutually-exclusive terminology - eg in phabricator "submit" is synonymous with "upload for review"; in gerrit "submit" is synonymous with "merge into trunk and push")
+
+### Lowest-common denominator front layer
+
+* `jj cr X` should work for every feasible forge, and work as consistently as possible across forges
+  * In most cases so far, the generic eg `jj cr abandon <CR ID>` and the backend eg `jj gerrit abandon <CR ID>` take literally the same `CrAbandonArgs` struct
+  * It's possible for backends to have backend-specific options, eg my `jj cr upload` has very minimal features, but under the hood it translates into a call to `jj gerrit upload`, and all the power and features of `jj gerrit upload` is still available
+
+### Code review status fetching for `jj cr log`
+
+* resolve the `--revision` flag into a list of Commit IDs which are due to be displayed
+* for each Commit ID, try to determine a Code Review ID
+  * for gerrit, this is the `Change-Id:` trailer, falling back to the change-id which jj generates during uploads
+  * for phabricator, this is the `Diffusion Revision:` "trailer"
+  * for github, this is the branch name
+* for each Code Review ID, fetch the code review status (ideally in a single batch call if the API supports it)
+* create a map of Commit ID -> Code Review Status
+* call `jj log` with this status map as an extra parameter
+* the custom template function `Commit.review()` will check the status map, and return either `None` or `Some(CodeReview)`
+  * CodeReview has various fields for overall status, CI/CD checks, unresolved comments, etc
+* the standard templating system renders the CodeReview however the user prefers
+
+-----
+
 <div class="title-block" style="text-align: center;" align="center">
 
 # Jujutsu—a version control system
