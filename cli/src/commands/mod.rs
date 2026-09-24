@@ -39,7 +39,16 @@ mod gerrit;
 #[cfg(feature = "git")]
 mod git;
 #[cfg(feature = "git")]
-mod github;
+<<<<<<< conflict 1 of 1
+%%%%%%% diff from: wrxnwzut 1040bf87 "cli/cr: forgejo backend" (rebased revision)
+\\\\\\\        to: wrxnwzut 1040bf87 "cli/cr: forgejo backend" (rebased revision)
+-pub mod github;
++mod github;
++++++++ yskqvuns 9488d9be "cli/cr: gitlab backend" (rebased revision)
+pub mod github;
+#[cfg(feature = "git")]
+mod gitlab;
+>>>>>>> conflict 1 of 1 ends
 mod help;
 mod interdiff;
 mod log;
@@ -135,6 +144,8 @@ enum Command {
     #[cfg(feature = "git")]
     Forgejo(forgejo::ForgejoArgs),
     #[cfg(feature = "git")]
+    Gitlab(gitlab::GitlabArgs),
+    #[cfg(feature = "git")]
     Gerrit(gerrit::GerritArgs),
     #[cfg(feature = "git")]
     #[command(subcommand)]
@@ -210,6 +221,8 @@ pub async fn run_command(ui: &mut Ui, command_helper: &CommandHelper) -> Result<
         Command::Fix(args) => fix::cmd_fix(ui, command_helper, args).await,
         #[cfg(feature = "git")]
         Command::Forgejo(args) => forgejo::cmd_forgejo(ui, command_helper, args).await,
+        #[cfg(feature = "git")]
+        Command::Gitlab(args) => gitlab::cmd_gitlab(ui, command_helper, args).await,
         #[cfg(feature = "git")]
         Command::Gerrit(sub_args) => gerrit::cmd_gerrit(ui, command_helper, sub_args).await,
         #[cfg(feature = "git")]
