@@ -40,6 +40,8 @@ mod gerrit;
 mod git;
 #[cfg(feature = "git")]
 pub mod github;
+#[cfg(feature = "git")]
+mod gitlab;
 mod help;
 mod interdiff;
 mod log;
@@ -135,6 +137,8 @@ enum Command {
     #[cfg(feature = "git")]
     Forgejo(forgejo::ForgejoArgs),
     #[cfg(feature = "git")]
+    Gitlab(gitlab::GitlabArgs),
+    #[cfg(feature = "git")]
     Gerrit(gerrit::GerritArgs),
     #[cfg(feature = "git")]
     #[command(subcommand)]
@@ -210,6 +214,8 @@ pub async fn run_command(ui: &mut Ui, command_helper: &CommandHelper) -> Result<
         Command::Fix(args) => fix::cmd_fix(ui, command_helper, args).await,
         #[cfg(feature = "git")]
         Command::Forgejo(args) => forgejo::cmd_forgejo(ui, command_helper, args).await,
+        #[cfg(feature = "git")]
+        Command::Gitlab(args) => gitlab::cmd_gitlab(ui, command_helper, args).await,
         #[cfg(feature = "git")]
         Command::Gerrit(sub_args) => gerrit::cmd_gerrit(ui, command_helper, sub_args).await,
         #[cfg(feature = "git")]

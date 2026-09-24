@@ -1,5 +1,5 @@
 services:
-  # Gerrit
+  # Gerrit - admin:secret:secret
   gerrit:
     build:
       context: ./forges/gerrit
@@ -7,7 +7,7 @@ services:
       - "127.0.0.1:8080:8080"
       - "127.0.0.1:29418:29418"
 
-  # Forgejo
+  # Forgejo - admin2:secret:/data/api-key
   forgejo:
     build:
       context: ./forges/forgejo
@@ -16,7 +16,7 @@ services:
     post_start:
       - command: sh /scripts/init.sh
 
-  # Phabricator
+  # Phabricator - admin:secret:api-aaa...
   phabricator-mysql:
     build:
       context: ./forges/phabricator-mysql
@@ -30,4 +30,11 @@ services:
       phabricator-mysql:
         condition: service_healthy
     post_start:
-      - command: sh /scripts/phabricator-init.sh
+      - command: sh /scripts/init.sh
+
+  # GitLab - root:secret???:secret
+  gitlab:
+    build:
+      context: ./forges/gitlab
+    ports:
+      - "127.0.0.1:8083:8083"
